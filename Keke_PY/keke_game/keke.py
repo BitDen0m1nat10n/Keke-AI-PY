@@ -869,12 +869,16 @@ def set_overlaps(game_state: GameState):
             game_state.overlaps.append(p)
             # put the object as far down as possible at its position:
             if field[0] != p:
+                if p not in field:
+                    raise GhostObjectError(game_state, p)
                 field.remove(p)
                 field.insert(0, p)
         else:
             game_state.unoverlaps.append(p)
             # put the object as far up as possible at its position:
             if field[len(field) - 1] != p:
+                if p not in field:
+                    raise GhostObjectError(game_state, p)
                 field.remove(p)
                 field.append(p)
 
@@ -957,13 +961,18 @@ def destroy_objs(dead, game_state: GameState):
     """
     deleted_ids: set = set()
     for obj in dead:
+        if obj.__class__ == str:
+            if obj not in game_state.object_map[obj.y][obj.x]:
+                raise GhostObjectError(game_state, obj)
+            game_state.object_map[obj.y][obj.x].remove(obj)
+            continue
         if obj.id in deleted_ids:
             continue
         deleted_ids.add(obj.id)
         # Remove all reference to the object
         if obj not in game_state.object_map[obj.y][obj.x]:
-            # TODO: this shouldn't happen, since non-existing objects can't die.
-            #           find out, how to reproduce this ghost deletion, and why it is happening
+            #raise GhostObjectError(game_state, obj)
+            # TODO: find out, how to reproduce this ghost deletion, and why it is happening
             print("GHOST DELETION OF:", obj)
             print("GHOST DELETION: CURRENTLY DELETING:", *dead)
             print("GHOST DELETION: UNIQUE STR: " + game_state.unique_str().replace('\n', '\nGHOST DELETION: UNIQUE STR: '))
@@ -971,8 +980,13 @@ def destroy_objs(dead, game_state: GameState):
                 print("GHOST DELETION: OBJECT MAP ROW:", row)
             print("\n")
             continue
-        game_state.phys.remove(obj)# = [ x for x in game_state.phys if x != obj ]
-        game_state.sort_phys[obj.name].remove(obj)# = [ x for x in sort_phys[obj.name] if x != obj ]
+        if obj.object_type == GameObjectType.Physical:
+            game_state.phys.remove(obj)# = [ x for x in game_state.phys if x != obj ]
+            game_state.sort_phys[obj.name].remove(obj)# = [ x for x in sort_phys[obj.name] if x != obj ]
+        elif obj.object_type in [GameObjectType.Word, GameObjectType.Keyword]:
+            game_state.words.remove(obj)
+        elif obj.object_type == GameObjectType.Undefined:
+            assert False, f"{obj}"
         game_state.object_map[obj.y][obj.x].remove(obj)# = [ x for x in game_state.object_map[obj.y][obj.x] if x != obj ]
 
 
@@ -1118,6 +1132,10 @@ def bad_feats(featured, sort_phys) -> List[GameObj]:
 
     return baddies
 
+@dataclass
+class GhostObjectError(RuntimeError):
+    state: GameState
+    obj: Union[str, GameObj]
 
 if __name__ == "__main__":
     pass

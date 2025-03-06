@@ -1,7 +1,10 @@
 import heapq
+from copy import deepcopy
+from itertools import chain
 
 from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
-from Keke_PY.keke_game.keke import GameState, Direction, check_win, advance_game_state
+from Keke_PY.keke_game.gui import play_level, play_game, yield_solution_delayed, inputs_from_keyboard
+from Keke_PY.keke_game.keke import GameState, Direction, check_win, advance_game_state, GhostObjectError
 from Keke_PY.search_agents.ai_interface import AIInterface, range_or_infinite_loop, AgentFromPolicy
 from typing import List, Tuple, Union
 
@@ -66,7 +69,12 @@ class HeuristicGuidedSearch(AIInterface):
 
             # Expand the node: explore all possible actions
             for action in [Direction.Up, Direction.Down, Direction.Left, Direction.Right, Direction.Wait]:
-                next_state = advance_game_state(action, current_state.copy())
+                try:
+                    next_state = advance_game_state(action, current_state.copy())
+                except GhostObjectError: # TODO: excepting here is for debugging only!
+                    while True:
+                        play_game(deepcopy(initial_state), chain(yield_solution_delayed(actions, 1.0), inputs_from_keyboard()))
+                        play_game(deepcopy(initial_state), inputs_from_keyboard())
                 if next_state.unique_str() not in visited:
                     # g(next) is the cost so far plus 1 (since each move costs 1)
                     new_g = g + 1
