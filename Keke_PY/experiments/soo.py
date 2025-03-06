@@ -32,16 +32,16 @@ for argument in sys.argv:
         int_arguments.append(int(argument))
 
 setups: [(bool, bool, int, bool)] = (
-    (False, False, 0, False),
-    (False, True, 1, False),
-    (False, False, 2, False),
-    (False, False, 3, False),
-    (False, False, 4, False),
+    (False, False, 0, False), # 0
+    (False, True, 1, False), # 1
+    (False, False, 2, False), # 2
+    (False, False, 3, False), # 3
+    (False, False, 4, False), # 4
 
-    (False, False, 5, False),
+    (False, False, 5, False), # 5
 
-    (True, False, 0, False),
-    (True, True, 1, False),
+    (True, False, 0, False), # 6
+    (True, True, 1, False), # 7
 
 
     (False, False, 0, True),
@@ -58,7 +58,7 @@ setups: [(bool, bool, int, bool)] = (
 trees, track, algorithm, use_astar = setups[int_arguments[0]]
 
 pop_size: int = 10
-n_generations: int = 30
+n_generations: int = 100
 
 
 n_evals: int = pop_size * n_generations
