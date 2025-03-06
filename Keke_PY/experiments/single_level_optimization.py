@@ -31,7 +31,7 @@ level_nr = int_arguments[0]
 use_astar: bool = False
 
 pop_size: int = 10
-n_generations: int = 20
+n_generations: int = 100
 
 
 n_evals: int = pop_size * n_generations
