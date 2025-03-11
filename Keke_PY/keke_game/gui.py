@@ -25,14 +25,20 @@ def render_tile(screen, tile, xpos, ypos):
 
 def render_game_state(screen, game_state: GameState):
 
-    for y, row in enumerate(game_state.object_map):
-        for x, tile in enumerate(row):
+    for y, row in enumerate(game_state.back_map):
+        for x, back_tile in enumerate(row):
             # Calculate position for the tile
             x_pos = x * TILE_SIZE
             y_pos = y * TILE_SIZE
 
+            tiles: List[Union[GameState, str]] = []
+            if back_tile != " ":
+                tiles.append(back_tile)
+            if game_state.obj_map[y][x] != " ":
+                tiles.append(game_state.obj_map[y][x])
+
             # Draw all objects on this tile:
-            for obj in tile:
+            for obj in tiles:
                 render_tile(screen, obj, x_pos, y_pos)
                 x_pos += 5
                 y_pos += 5
@@ -200,7 +206,7 @@ if __name__ == '__main__':
                     continue
                 ai_solution = try_ai(
                     demo_level_1["ascii"],
-                    20000,#5 ** (len(demo_level_1["solution"]) + 2),
+                    2000,#5 ** (len(demo_level_1["solution"]) + 2),
                     len(demo_level_1["solution"]) + 2
                 )
                 if ai_solution is not None:

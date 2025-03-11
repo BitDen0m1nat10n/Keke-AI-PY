@@ -14,7 +14,7 @@ class SimpleHeuristic(Heuristic):
         :return: Estimated cost to reach the goal.
         """
         if len(state.players) == 0:
-            return 10 * float(len(state.object_map) + len(state.object_map[0]))
+            return 10 * float(len(state.back_map) + len(state.back_map[0]))
         if not state.winnables:
             return float('inf')  # No winnable objects
 
