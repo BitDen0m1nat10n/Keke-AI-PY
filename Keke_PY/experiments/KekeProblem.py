@@ -78,12 +78,12 @@ class KekeProblem(Problem):
             executor: Executor = ProcessPoolExecutor(),
             limit_levels: int = None,
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
+            level_sources: [str] = ("./json_levels/train_LEVELS.json", "./json_levels/test_LEVELS.json")
     ):
         levels: List[str] = [
-            *[level["ascii"] for level in
-              load_level_set("./json_levels/train_LEVELS.json")["levels"]],
-            *[level["ascii"] for level in
-              load_level_set("./json_levels/test_LEVELS.json")["levels"]],
+            level["ascii"]
+            for level_source in level_sources
+            for level in load_level_set(level_source)["levels"]
         ]
         if limit_levels is not None:
             levels = levels[:limit_levels]
