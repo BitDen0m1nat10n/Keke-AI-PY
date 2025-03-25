@@ -8,7 +8,7 @@
 #SBATCH --array=0-1
 #SBATCH --cpus-per-task=20
 #SBATCH --mem-per-cpu=4G
-#SBATCH --time=4-0 # 4Days + 0hours
+#SBATCH --time=8-0 # 8Days + 0hours
 #SBATCH --output=soo_100_gen_tree_run_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
 
 

@@ -964,12 +964,13 @@ def destroy_objs(dead, game_state: GameState):
         if obj not in game_state.object_map[obj.y][obj.x]:
             # TODO: this shouldn't happen, since non-existing objects can't die.
             #           find out, how to reproduce this ghost deletion, and why it is happening
-            print("GHOST DELETION OF:", obj)
-            print("GHOST DELETION: CURRENTLY DELETING:", *dead)
-            print("GHOST DELETION: UNIQUE STR: " + game_state.unique_str().replace('\n', '\nGHOST DELETION: UNIQUE STR: '))
-            for row in game_state.object_map:
-                print("GHOST DELETION: OBJECT MAP ROW:", row)
-            print("\n")
+            if False: # logging takes time
+                print("GHOST DELETION OF:", obj)
+                print("GHOST DELETION: CURRENTLY DELETING:", *dead)
+                print("GHOST DELETION: UNIQUE STR: " + game_state.unique_str().replace('\n', '\nGHOST DELETION: UNIQUE STR: '))
+                for row in game_state.object_map:
+                    print("GHOST DELETION: OBJECT MAP ROW:", row)
+                print("\n")
             continue
         game_state.phys.remove(obj)# = [ x for x in game_state.phys if x != obj ]
         game_state.sort_phys[obj.name].remove(obj)# = [ x for x in sort_phys[obj.name] if x != obj ]

@@ -57,6 +57,8 @@ class TrackedRepresentation(HeuristicRepresentation):
         if just_id:
             return str(int(x[0]))
         return f"{';'.join(map(str, map(int, x[:self._offset])))};{self._inner_repr.serialize(x[self._offset:])}"
+    def serialize_untracked(self, x: np.ndarray) -> str:
+        return self._inner_repr.serialize(x[self._offset:])
     def deserialize(self, x: str, just_id: bool = True) -> np.ndarray:
         if just_id:
             return self._tracked_instances[int(x)]

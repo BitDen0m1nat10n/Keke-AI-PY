@@ -40,3 +40,14 @@ def get_performance_graph_from_timeline(
         (past_evaluations, performances[(gen, i, batch)])
         for past_evaluations, (gen, i) in timeline
     ]
+
+
+def get_all_performances_from_timeline(
+        data: KekeProblem,
+        timeline: List[Tuple[int, Tuple[int, int]]]
+) -> List[Tuple[int, Dict[int, float]]]:
+    performances: Dict[Tuple[int, int, int], float] = data.get_performances_of_all_generations_instances_and_batches()
+    return [
+        (past_evaluations, dict((batch, performances[(gen, i, batch)]) for batch in range(-1, len(data.training_batches))))
+        for past_evaluations, (gen, i) in timeline
+    ]
