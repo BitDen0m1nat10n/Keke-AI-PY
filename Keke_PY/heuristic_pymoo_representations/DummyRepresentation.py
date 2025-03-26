@@ -50,8 +50,9 @@ class DummyRepresentation(HeuristicRepresentation):
 
 class ZeroHeuristicRepresentation(SingleObjRepresentation[int]):
     def _assert_type(self, x: object) -> int:
-        assert isinstance(x, int)
-        return x
+        assert isinstance(x, int) or isinstance(x, np.int64), f"{x} is of type {x.__class__}"
+        assert x == 0, f"{x} is of type {x.__class__}"
+        return 0
 
     def _into_heuristic(self, x: int) -> Heuristic:
         return ZeroHeuristic()

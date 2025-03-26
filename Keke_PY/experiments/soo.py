@@ -80,7 +80,7 @@ optimization_algorithm: Algorithm = [
 ][algorithm]
 
 
-test_problem = KekeProblem.default_problem(representation, multiprocessing.Pool(20), None, agent_factory)
+test_problem = KekeProblem.default_problem(representation, multiprocessing.Pool(20), agent_factory, limit_levels=None)
 
 
 def measure_time() -> Iterable[None]:

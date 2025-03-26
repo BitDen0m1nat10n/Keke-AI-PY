@@ -3,7 +3,6 @@ import math
 from concurrent.futures import Executor, ProcessPoolExecutor
 from copy import deepcopy
 from itertools import chain
-from math import floor
 from typing import List, Tuple, Dict, Union
 
 import numpy as np
@@ -47,7 +46,6 @@ class KekeProblem(Problem):
         self.generation = 0
         self.past_instances_by_gen_and_index = {}
         self.past_evaluations_by_gen_index_and_level_id = {}
-        assert all(len(batch) > 0 for batch in training_batches)
         self.training_batches = training_batches
         self.test_batch = test_batch
         self.max_node_expansions = max_node_expansions
@@ -76,20 +74,30 @@ class KekeProblem(Problem):
             cls,
             representation: HeuristicRepresentation,
             executor: Executor = ProcessPoolExecutor(),
-            limit_levels: int = None,
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
+            training_levels_or_src: Union[List[str], str] = None,
+            test_levels_or_src: Union[List[str], str] = None,
+            limit_levels: int = None,
     ):
-        levels: List[str] = [
-            *[level["ascii"] for level in
-              load_level_set("./json_levels/train_LEVELS.json")["levels"]],
-            *[level["ascii"] for level in
-              load_level_set("./json_levels/test_LEVELS.json")["levels"]],
-        ]
+        if training_levels_or_src is None:
+            training_levels_or_src = "./json_levels/train_LEVELS.json"
+        if training_levels_or_src.__class__ == str:
+            training_levels_or_src = [
+                level["ascii"]
+                for level in load_level_set(training_levels_or_src)["levels"]
+            ]
+        training_levels: List[str] = training_levels_or_src
+        if test_levels_or_src is None:
+            test_levels_or_src = "./json_levels/test_LEVELS.json"
+        if test_levels_or_src.__class__ == str:
+            test_levels_or_src = [
+                level["ascii"]
+                for level in load_level_set(test_levels_or_src)["levels"]
+            ]
+        test_levels: List[str] = test_levels_or_src
         if limit_levels is not None:
-            levels = levels[:limit_levels]
-        training_ratio: float = 0.6
-        training_levels: List[str] = levels[:floor(training_ratio * len(levels))]
-        test_levels: List[str] = levels[floor(training_ratio * len(levels)):]
+            training_levels = training_levels[:limit_levels]
+            test_levels = test_levels[:limit_levels]
         return cls(
             training_batches=[training_levels],
             representation=representation,
@@ -123,6 +131,7 @@ class KekeProblem(Problem):
         )
 
     def _evaluate(self, x, out, *args, **kwargs):
+        assert all(len(batch) > 0 for batch in self.training_batches), "Be aware, that there is no training without training data! (call register_and_run_next_generation instead)"
 
         self.register_and_run_next_generation(x)
 
