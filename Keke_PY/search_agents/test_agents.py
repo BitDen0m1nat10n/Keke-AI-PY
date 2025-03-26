@@ -1,3 +1,4 @@
+import math
 from typing import Tuple, Union, List, Callable
 
 from Keke_PY.search_agents.AStar import AStar, test_heuristics
@@ -32,6 +33,6 @@ if __name__ == "__main__":
         for name, get_agent in agent_generators:
             print(f"Now running: {name}")
             agent = get_agent()
-            solution = agent.search(game_state, max_forward_model_calls, max_depth, True)
+            solution = agent.search(game_state, max_forward_model_calls, max_depth, math.inf, True)
             print(f"{name} Solution: {solution}\n\n")
 

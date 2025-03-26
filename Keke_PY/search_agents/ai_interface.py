@@ -1,3 +1,4 @@
+import math
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import List, Tuple, Union, Iterable
@@ -19,6 +20,7 @@ class AIInterface(ABC):
             initial_state: GameState,
             max_forward_model_calls: Union[int, None] = None,
             max_depth: Union[int, None] = None,
+            max_time: float = math.inf,
             print_progress_bar: bool = False
     ) -> Tuple[Union[List[str], None], int]:
         """
@@ -26,6 +28,7 @@ class AIInterface(ABC):
         :param initial_state: The initial state of the game.
         :param max_forward_model_calls: Maximum number of node expansions to avoid infinite loops.
         :param max_depth: Maximum depth for algorithms like DFS.
+        :param max_time: Maximum calculation time.
         :param print_progress_bar: if True, there will be a progress-bar in the console for the solving-attempt.
         :return: List of actions that lead to a solution (if found, else None), and the number of node expansions.
         """

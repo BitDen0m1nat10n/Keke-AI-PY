@@ -1,4 +1,6 @@
 import heapq
+import math
+import time
 
 from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
 from Keke_PY.keke_game.keke import GameState, Direction, check_win, advance_game_state
@@ -25,6 +27,7 @@ class HeuristicGuidedSearch(AIInterface):
             initial_state: GameState,
             max_forward_model_calls: Union[int, None] = None,
             max_depth: Union[int, None] = None,
+            max_time: float = math.inf,
             print_progress_bar: bool = False
     ) -> Tuple[Union[List[str], None], int]:
         """
@@ -33,11 +36,14 @@ class HeuristicGuidedSearch(AIInterface):
         :param initial_state: The initial state of the game.
         :param max_forward_model_calls: Maximum number of node expansions to avoid infinite loops.
         :param max_depth: Maximum depth for algorithms like DFS.
+        :param max_time: Maximum calculation time.
         :param print_progress_bar: if True, there will be a progress-bar in the console for the solving-attempt.
         :return: List of actions that lead to a solution (if found, else None), and the number of node expansions.
         """
         # Priority queue: (h(n), g(n), current_state, actions_so_far)
         # g(n) is the path cost and h(n) is the heuristic estimate
+
+        stop_time: time = time.time() + max_time
 
         ctx = {
             "initial GameState": initial_state,
@@ -50,6 +56,8 @@ class HeuristicGuidedSearch(AIInterface):
 
         visited = set()
         for i in range_or_infinite_loop(max_forward_model_calls, print_progress_bar):
+            if time.time() >= stop_time:
+                return None, i
             if not pq:
                 break
             h, g, _, current_state, actions = heapq.heappop(pq)

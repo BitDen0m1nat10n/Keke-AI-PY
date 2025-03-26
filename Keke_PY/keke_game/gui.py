@@ -172,9 +172,9 @@ if __name__ == '__main__':
     from simulation import load_level_set
 
 
-    if False:
+    if True:
         #['Up', 'Right']
-        play_level('____________\n_.........._\n_.r....f..._\n_.....bssss_\n_.R.......F_\n_B1..f..b.1_\n_AO........_\n_.rssssssss_\n_.........F_\n_ss...R...1_\n_....B12W.3_\n_oS14...1.._\n____________', inputs_from_keyboard())
+        play_level('____________________\n_BWw..............._\n_11w.....G10......._\n_26w..wwwwwwww....._\n_www..woooooow....._\n_.....wooR15ow....._\n_.....woooooow....._\n_.....woborrow....._\n_.....woooooow....._\n_..wwwwwggggwwwww.._\n_..w............w.._\n_..w............w.._\n_..w............w.._\n_..wggg.........w.._\n_..wggg.....F13.w.._\n_..wfgg.........w.._\n_..wwwwwwwwwwwwww.._\n_.................._\n_.................._\n____________________', inputs_from_keyboard())
 
 
     working: List[Tuple[str, int]] = []

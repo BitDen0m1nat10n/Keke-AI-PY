@@ -46,7 +46,7 @@ optimization_algorithm = NSGA2(pop_size=pop_size)
 level_set = load_level_set("./json_levels/train_LEVELS.json")
 test_batch: List[str] = [level_set["levels"][index]["ascii"] for index in range(50)][:3]
 
-test_problem = KekeProblem([test_batch], WeightedHeuristicSumRepresentation(), 2000, multiprocessing.Pool())
+test_problem = KekeProblem([test_batch], WeightedHeuristicSumRepresentation(), 2000, executor=multiprocessing.Pool())
 
 
 

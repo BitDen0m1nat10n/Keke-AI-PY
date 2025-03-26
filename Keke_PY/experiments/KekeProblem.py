@@ -1,5 +1,6 @@
 import itertools
 import math
+import time
 from concurrent.futures import Executor, ProcessPoolExecutor
 from copy import deepcopy
 from itertools import chain
@@ -22,6 +23,7 @@ class KekeProblem(Problem):
     all_levels: List[str]
 
     max_node_expansions: int
+    max_calculation_time: float
 
     executor: Executor
 
@@ -30,7 +32,7 @@ class KekeProblem(Problem):
 
     generation: int
     past_instances_by_gen_and_index: Dict[Tuple[int, int], np.ndarray]
-    past_evaluations_by_gen_index_and_level_id: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int]]
+    past_evaluations_by_gen_index_and_level_id: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int, float]]
 
 
     def __init__(
@@ -38,6 +40,7 @@ class KekeProblem(Problem):
             training_batches: List[List[str]],
             representation: HeuristicRepresentation,
             max_node_expansions: int = 2000,
+            max_calculation_time: float = math.inf,
             executor: Executor = ProcessPoolExecutor(),
             test_batch: List[str] = (),
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
@@ -49,6 +52,7 @@ class KekeProblem(Problem):
         self.training_batches = training_batches
         self.test_batch = test_batch
         self.max_node_expansions = max_node_expansions
+        self.max_calculation_time = max_calculation_time
         training_levels = set(chain(*training_batches))
         assert all(level not in training_levels for level in test_batch), "Training on test-levels is not allowed!"
         self.all_levels = sorted(list(training_levels)) + test_batch
@@ -108,12 +112,13 @@ class KekeProblem(Problem):
         )
 
     def run_as_next_generation(self, instances: [AIInterface]):
-        simulation_data_list: List[Tuple[Tuple[int, AIInterface], str, int]] = list(itertools.product(
+        simulation_data_list: List[Tuple[Tuple[int, AIInterface], str, int, float]] = list(itertools.product(
             enumerate(instances),
             self.all_levels,
-            [self.max_node_expansions]
+            [self.max_node_expansions],
+            [self.max_calculation_time],
         ))
-        simulation_results: Dict[Tuple[int, str], Tuple[Union[List[str], None], int]] = dict(list(self.executor.map(
+        simulation_results: Dict[Tuple[int, str], Tuple[Union[List[str], None], int, float]] = dict(list(self.executor.map(
             evaluate_ai_on_level, simulation_data_list
         )))
         self.past_evaluations_by_gen_index_and_level_id.update(((self.generation, key[0], self.level_to_id_map[key[1]]), result) for key, result in simulation_results.items())
@@ -267,9 +272,11 @@ class KekeProblem(Problem):
                 new_level_id: int = res.level_to_id_map[all_levels[int(old_level_id)]]
                 solution: Union[List[str], None]
                 node_expansions: int
+                calculation_time: float
                 assert result is not None, f"Unexpected value in : {line}"
+                # the following cases are the types of logging, for this code to be compatible with old logs
                 if len(result) == 1:
-                    # old style logging
+                    # logging only node_expansions / "----" for no solution
                     result: str = result[0].strip()
                     if result == "----":
                         node_expansions = max_node_expansions
@@ -278,9 +285,9 @@ class KekeProblem(Problem):
                         assert result.isdigit(), f"Unexpected value in '{result}'"
                         node_expansions = int(result)
                         solution = ["solution was not logged"]
-                else:
-                    # new style logging
-                    assert len(result) == 2, f"Unexpected value in : {line}"
+                    calculation_time = math.nan
+                elif len(result) == 2:
+                    # logging node_expansions and solution/"----"
                     str_node_expansions, str_solution = result
                     str_solution = str_solution.strip()
                     assert str_node_expansions.isdigit(), f"Unexpected value in : {line}"
@@ -289,7 +296,21 @@ class KekeProblem(Problem):
                         solution = None
                     else:
                         solution = list(iter(str_solution))
-                result: Tuple[Union[List[str], None], int] = (solution, node_expansions)
+                    calculation_time = math.nan
+                else:
+                    # currently used logging:
+                    assert len(result) == 3, f"Unexpected value in : {line}"
+                    # logging node_expansions, calculation_time and solution/"----"
+                    str_node_expansions, str_calculation_time, str_solution = result
+                    str_solution = str_solution.strip()
+                    assert str_node_expansions.isdigit(), f"Unexpected value in : {line}"
+                    node_expansions = int(str_node_expansions)
+                    if str_solution == "----":
+                        solution = None
+                    else:
+                        solution = list(iter(str_solution))
+                    calculation_time = float(str_calculation_time)
+                result: Tuple[Union[List[str], None], int, float] = (solution, node_expansions, calculation_time)
                 res.past_evaluations_by_gen_index_and_level_id.update([(
                     (int(generation), int(index), new_level_id),
                     result
@@ -300,10 +321,10 @@ class KekeProblem(Problem):
         for index, instance in enumerate(x):
             self.log_line(f"EVAL_INSTANCE:{self.generation}:{index}:{self.representation.serialize(instance)}")
 
-    def log_simulation_data(self, simulation_results: Dict[Tuple[int, str], Tuple[Union[List[str], None], int]]):
-        for (index, level), (solution, forward_model_calls) in simulation_results.items():
+    def log_simulation_data(self, simulation_results: Dict[Tuple[int, str], Tuple[Union[List[str], None], int, float]]):
+        for (index, level), (solution, forward_model_calls, calc_time) in simulation_results.items():
             solution_str: str = '----' if solution is None else ''.join(sol[0] for sol in solution)
-            self.log_line(f"RUN_RESULT:{self.generation}:{index}:{self.level_to_id_map[level]}:{forward_model_calls}:{solution_str}")
+            self.log_line(f"RUN_RESULT:{self.generation}:{index}:{self.level_to_id_map[level]}:{forward_model_calls}:{calc_time}:{solution_str}")
 
     def log_performances(self, performance_of_instance_on_batch: Dict[Tuple[int, int], float]):
         nr_of_instances: int = max(key[0] for key in performance_of_instance_on_batch.keys()) + 1
@@ -315,18 +336,23 @@ class KekeProblem(Problem):
 
 
 def evaluate_ai_on_level(
-    simulation_data: Tuple[Tuple[int, AIInterface], str, int]
-) -> Tuple[Tuple[int, str], Tuple[Union[List[str], None], int]]:
+    simulation_data: Tuple[Tuple[int, AIInterface], str, int, float]
+) -> Tuple[Tuple[int, str], Tuple[Union[List[str], None], int, float]]:
     ai_index: int = simulation_data[0][0]
     agent: AIInterface = simulation_data[0][1]
     level: str = simulation_data[1]
     max_forward_model_calls: int = simulation_data[2]
+    max_calculation_time: float = simulation_data[3]
     start_state: GameState = make_level(parse_map(level))
+    start_time: float = time.time()
     solution: Tuple[Union[List[str], None], int] = agent.search(
         start_state,
         max_forward_model_calls,
         None,
+        max_calculation_time,
         False
     )
-    #print((ai_index, level), solution[0], solution[0], solution[1])
-    return (ai_index, level), solution
+    end_time: float = time.time()
+    #print((ai_index, level), solution[0], solution[0], solution[1], end_time - start_time)
+    #print(end_time - start_time, solution[1], solution[0])
+    return (ai_index, level), (solution[0], solution[1], end_time - start_time)
