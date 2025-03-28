@@ -354,5 +354,5 @@ def evaluate_ai_on_level(
     )
     end_time: float = time.time()
     #print((ai_index, level), solution[0], solution[0], solution[1], end_time - start_time)
-    #print(end_time - start_time, solution[1], solution[0])
+    print(end_time - start_time, solution[1], solution[0])
     return (ai_index, level), (solution[0], solution[1], end_time - start_time)
