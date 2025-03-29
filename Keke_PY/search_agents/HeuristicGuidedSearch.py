@@ -56,10 +56,8 @@ class HeuristicGuidedSearch(AIInterface):
 
         visited = set()
         for i in range_or_infinite_loop(max_forward_model_calls, print_progress_bar):
-            if time.time() >= stop_time:
+            if not pq or time.time() >= stop_time:
                 return None, i
-            if not pq:
-                break
             h, g, _, current_state, actions = heapq.heappop(pq)
 
             # Check if we have won the game

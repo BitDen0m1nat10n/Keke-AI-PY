@@ -36,10 +36,8 @@ class DFS(AIInterface):
 
 
         for i in range_or_infinite_loop(max_forward_model_calls, print_progress_bar):
-            if time.time() >= stop_time:
+            if not stack or time.time() >= stop_time:
                 return None, i
-            if not stack:
-                break
             current_state, actions = stack.pop()
 
             # Check if we have won the game
