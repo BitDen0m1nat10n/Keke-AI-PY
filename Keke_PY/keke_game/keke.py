@@ -5,7 +5,7 @@
 import copy
 import uuid
 from dataclasses import dataclass
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Tuple
 from enum import Enum
 import pygame
 
@@ -178,7 +178,7 @@ class GameObj:
 @dataclass
 class GameState:
     orig_map: List
-    object_map: List[List[List[Union[str, GameObj]]]]
+    object_map: "GameMap"
     words: List
     phys: List
     is_connectors: List
@@ -201,7 +201,7 @@ class GameState:
 
     def clear(self):
         self.orig_map = []
-        self.object_map = []
+        self.object_map = None
         self.words = []
         self.phys = []
         self.is_connectors = []
@@ -243,13 +243,13 @@ class GameState:
                 # base performance without directions: {-1: 1649.4324324324325, 0: 1717.1454545454544}
 
         def unique_position_str(i: int, j: int) -> str:
-            return ''.join(map(unique_obj_str, self.object_map[i][j])) + '.'
+            return ''.join(map(unique_obj_str, self.object_map.objects_at_position((i,j)))) + '.'
 
         return ''.join([
             '\n' if j == -1
                 else unique_position_str(i, j)
-        for i in range(len(self.object_map))
-            for j in range(-1, len(self.object_map[0]))
+        for i in range(self.object_map.size[0])
+            for j in range(-1, self.object_map.size[1])
         ])
 
 
@@ -318,13 +318,13 @@ def try_move(e: Union[GameObj, str], action: Direction, state: GameState, alread
     current_field_list: List[Union[GameObj, str]] = [e]
     # if multiple player objects start at the same position, they should be moved together:
     if e in state.players:
-        current_field_list = [x for x in state.object_map[e.y][e.x] if x.name == e.name and x not in already_moved_objs]
+        current_field_list = [x for x in state.object_map.objects_at_position((e.y, e.x)) if x.name == e.name and x not in already_moved_objs]
     objects_to_move_along: List[Union[GameObj, str]] = []
     while True:
         x_, y_ = x_ + action.dx(), y_ + action.dy()
-        if not (0 <= x_ < len(state.object_map[0]) and 0 <= y_ <= len(state.object_map)):
+        if not (0 <= x_ < state.object_map.size[1] and 0 <= y_ <= state.object_map.size[0]):
             return False
-        objects_in_the_way: List[Union[GameObj, str]] = state.object_map[y_][x_]
+        objects_in_the_way: List[Union[GameObj, str]] = state.object_map.objects_at_position((y_, x_))
         local_objects_to_move_along: List[Union[GameObj, str]] = []
         continue_deeper: bool = False
         for object_in_the_way in objects_in_the_way:
@@ -340,10 +340,10 @@ def try_move(e: Union[GameObj, str], action: Direction, state: GameState, alread
     objects_to_move_along += current_field_list
 
     for object_to_move in reversed(objects_to_move_along):
-        state.object_map[object_to_move.y][object_to_move.x].remove(object_to_move)
+        state.object_map.remove_object(object_to_move, (object_to_move.y, object_to_move.x))
         object_to_move.x += action.dx()
         object_to_move.y += action.dy()
-        state.object_map[object_to_move.y][object_to_move.x].append(object_to_move)
+        state.object_map.put_last_object(object_to_move, (object_to_move.y, object_to_move.x))
         object_to_move.dir = action
         already_moved_objs.append(object_to_move)
 
@@ -415,7 +415,7 @@ def assign_map_objs(game_state: GameState):
             object_name = character_to_name[character]
             if "_" not in object_name:
                 if object_name == "border":
-                    game_state.object_map[r][c].append('_')
+                    game_state.object_map.put_last_object('_', (r, c))
                     continue
                 elif object_name == "empty":
                     continue
@@ -436,7 +436,7 @@ def assign_map_objs(game_state: GameState):
                     is_connectors.append(w)
 
                 # replace character with object
-                game_state.object_map[r][c].append(w)
+                game_state.object_map.put_last_object(w, (r, c))
 
             # retrieve physical-based objects
             elif word_type == "obj":
@@ -450,27 +450,20 @@ def assign_map_objs(game_state: GameState):
                 sort_phys[base_obj].append(o)
 
                 # replace character with object
-                game_state.object_map[r][c].append(o)
+                game_state.object_map.put_last_object(o, (r, c))
 
 
 
 
-def generate_empty_map(m: List[List[str]]) -> List[List[List[Union[GameObj, str]]]]:
+def generate_empty_map(m: List[List[str]]) -> "GameMap":
     """
     Split the blocked_fields_map into two layers: background blocked_fields_map and object blocked_fields_map.
 
     :param m: The input 2D blocked_fields_map of characters.
     :return: Tuple (background_map, object_map).
     """
-    res: List[List[List[Union[GameObj, str]]]] = []
-    for r in range(len(m)):
-        res.append([])
-        for c in range(len(m[0])):
-            res[r].append([])
 
-            #res[r][c].append(m[r][c])
-
-    return res
+    return GameMap((len(m), len(m[0])))
 
 
 def only_top_objects_string(game_state: GameState) -> str:
@@ -481,8 +474,8 @@ def only_top_objects_string(game_state: GameState) -> str:
     :return: A string representation of the combined maps.
     """
     map_string = ""
-    for row in range(len(game_state.object_map)):
-        for column in range(len(game_state.object_map[0])):
+    for row in range(game_state.object_map.size[0]):
+        for column in range(game_state.object_map.size[1]):
             obj = top_obj_at_pos(column, row, game_state)
             if obj is None:
                 map_string += "."
@@ -569,10 +562,11 @@ def top_obj_at_pos(x: int, y: int, state: GameState) -> Optional[GameObj]:
     :param state: The current game-state
     :return: The object at the specified coordinates.
     """
-    for obj in reversed(state.object_map[y][x]):
+    res: Optional[GameObj] = None
+    for obj in state.object_map.objects_at_position((y, x)):
         if obj.__class__ == GameObj:
-            return obj
-    return None
+            res = obj
+    return res
 
 
 def is_word(e: Union[str, GameObj]):
@@ -864,27 +858,19 @@ def set_overlaps(game_state: GameState):
 
 
     for p in game_state.phys:
-        field = game_state.object_map[p.y][p.x]
         if not p.is_movable and not p.is_stopped:
             game_state.overlaps.append(p)
             # put the object as far down as possible at its position:
-            if field[0] != p:
-                field.remove(p)
-                field.insert(0, p)
+            game_state.object_map.bubble_to_first(p, (p.y, p.x))
         else:
             game_state.unoverlaps.append(p)
             # put the object as far up as possible at its position:
-            if field[len(field) - 1] != p:
-                field.remove(p)
-                field.append(p)
+            game_state.object_map.bubble_to_last(p, (p.y, p.x))
 
     game_state.unoverlaps.extend(game_state.words)
     # Words will always be as far up as possible:
     for w in game_state.words:
-        field = game_state.object_map[w.y][w.x]
-        if field[len(field) - 1] != w:
-            field.remove(w)
-            field.append(w)
+        game_state.object_map.bubble_to_last(w, (w.y, w.x))
 
 
 # Check if an object is overlapping another
@@ -961,7 +947,7 @@ def destroy_objs(dead, game_state: GameState):
             continue
         deleted_ids.add(obj.id)
         # Remove all reference to the object
-        if obj not in game_state.object_map[obj.y][obj.x]:
+        if obj not in game_state.object_map.objects_at_position((obj.y, obj.x)):
             # TODO: this shouldn't happen, since non-existing objects can't die.
             #           find out, how to reproduce this ghost deletion, and why it is happening
             if False: # logging takes time
@@ -974,7 +960,7 @@ def destroy_objs(dead, game_state: GameState):
             continue
         game_state.phys.remove(obj)# = [ x for x in game_state.phys if x != obj ]
         game_state.sort_phys[obj.name].remove(obj)# = [ x for x in sort_phys[obj.name] if x != obj ]
-        game_state.object_map[obj.y][obj.x].remove(obj)# = [ x for x in game_state.object_map[obj.y][obj.x] if x != obj ]
+        game_state.object_map.remove_object(obj, (obj.y, obj.x))# = [ x for x in game_state.object_map[obj.y][obj.x] if x != obj ]
 
 
     # Reset the objects, if anything was deleted
@@ -1051,8 +1037,7 @@ def change_sprite(o, w, state: GameState):
     state.phys.append(o2)  # in with the new...
 
     # Replace object on obj_map/back_map
-    field: List[Union[GameObj, str]] = state.object_map[o.y][o.x]
-    field[field.index(o)] = o2
+    state.object_map.replace(o, o2, (o.y, o.x))
 
     # Add to the list of objects under a certain name
     if w not in state.sort_phys:
@@ -1120,5 +1105,123 @@ def bad_feats(featured, sort_phys) -> List[GameObj]:
     return baddies
 
 
-if __name__ == "__main__":
-    pass
+
+
+
+
+
+
+
+
+class GameMap:
+    size: Tuple[int, int]
+    position_to_first_index: Dict[Tuple[int, int], int]
+    position_to_last_index: Dict[Tuple[int, int], int]
+    index_to_next_index: Dict[int, int]
+    index_to_object: Dict[int, Union[GameObj, str]]
+    next_index_to_generate: int
+
+    def __init__(self, size: Tuple[int, int]):
+        self.size = size
+        self.position_to_first_index = {}
+        self.position_to_last_index = {}
+        self.index_to_next_index = {}
+        self.index_to_object = {}
+        self.next_index_to_generate = ~0
+
+
+    def put_first_object(self, obj: Union[GameObj, str], position: Tuple[int, int]):
+        new_index = self.next_index_to_generate
+        self.next_index_to_generate += 1
+        self.index_to_object[new_index] = obj
+        following_index: int = self.position_to_first_index.get(position, -1)
+        self.position_to_first_index[position] = new_index
+        if following_index == -1:
+            self.position_to_last_index[position] = new_index
+        else:
+            self.index_to_next_index[new_index] = following_index
+
+    def put_last_object(self, obj: Union[GameObj, str], position: Tuple[int, int]):
+        new_index = self.next_index_to_generate
+        self.next_index_to_generate += 1
+        self.index_to_object[new_index] = obj
+        prev_last_index: int = self.position_to_last_index.get(position, -1)
+        self.position_to_last_index[position] = new_index
+        if prev_last_index == -1:
+            self.position_to_first_index[position] = new_index
+        else:
+            self.index_to_next_index[prev_last_index] = new_index
+
+    def _iter_indices_for_position(self, position: Tuple[int, int]) -> [int]:
+        index: int = self.position_to_first_index.get(position, -1)
+        while index != -1:
+            yield index
+            index = self.index_to_next_index.get(index, -1)
+        return
+
+    def objects_at_position(self, position: Tuple[int, int]) -> [Union[GameObj, str]]:
+        return map(lambda index: self.index_to_object[index], self._iter_indices_for_position(position))
+
+    def remove_object(self, obj: Union[GameObj, str], position: Tuple[int, int] = None):
+        if position is None:
+            position = (obj.y, obj.x)
+        prev_index: int = -1
+        index: int = self.position_to_first_index.get(position, -1)
+        while index != -1:
+            current_obj: Union[GameObj, str] = self.index_to_object[index]
+            if current_obj == obj:
+                self.index_to_object.__delitem__(index)
+                following_index: int = self.index_to_next_index.get(index, -1)
+                if prev_index == -1:
+                    if following_index == -1:
+                        self.position_to_first_index.__delitem__(position)
+                        self.position_to_last_index.__delitem__(position)
+                    else:
+                        self.position_to_first_index[position] = following_index
+                else:
+                    if following_index == -1:
+                        self.index_to_next_index.__delitem__(prev_index)
+                        self.position_to_last_index[position] = prev_index
+                    else:
+                        self.index_to_next_index[prev_index] = following_index
+                return
+            prev_index = index
+            index = self.index_to_next_index.get(index, -1)
+        assert False
+
+    def replace(self, old: Union[GameObj, str], new: Union[GameObj, str], position: Tuple[int, int] = None):
+        for obj in [old, new]:
+            if obj.__class__ == GameObj:
+                if position is None:
+                    position = (obj.y, obj.x)
+                else:
+                    assert obj.y == position[0] and obj.x == position[1]
+        assert position is not None
+
+        index: int = self.position_to_first_index.get(position, -1)
+        while index != -1:
+            if self.index_to_object[index] == old:
+                self.index_to_object[index] = new
+                return
+            index = self.index_to_next_index.get(index, -1)
+        assert False
+
+    def bubble_to_first(self, obj: Union[GameObj, str], position: Tuple[int, int]):
+        last_obj: Union[GameObj, str] = obj
+        for index in self._iter_indices_for_position(position):
+            last_obj, self.index_to_object[index] = self.index_to_object[index], last_obj
+            if last_obj == obj:
+                return
+        assert False
+
+    def bubble_to_last(self, obj: Union[GameObj, str], position: Tuple[int, int]):
+        last_index: int = -1
+        for index in self._iter_indices_for_position(position):
+            if last_index == -1:
+                if self.index_to_object[index] == obj:
+                    last_index = index
+            else:
+                self.index_to_object[last_index] = self.index_to_object[index]
+                last_index = index
+        assert last_index != -1
+        self.index_to_object[last_index] = obj

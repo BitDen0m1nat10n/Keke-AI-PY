@@ -1,4 +1,5 @@
 import multiprocessing
+from copy import deepcopy
 from typing import Tuple, Dict, Union, List
 
 from Keke_PY.experiments.KekeProblem import KekeProblem
@@ -15,7 +16,8 @@ def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = Heur
         representation,
         multiprocessing.Pool(),
         agent_factory=agent_factory,
-        test_levels_or_src=["____________________\n_BWw..............._\n_11w.....G10......._\n_26w..wwwwwwww....._\n_www..woooooow....._\n_.....wooR15ow....._\n_.....woooooow....._\n_.....woborrow....._\n_.....woooooow....._\n_..wwwwwggggwwwww.._\n_..w............w.._\n_..w............w.._\n_..w............w.._\n_..wggg.........w.._\n_..wggg.....F13.w.._\n_..wfgg.........w.._\n_..wwwwwwwwwwwwww.._\n_.................._\n_.................._\n____________________"],#"./json_levels/full_biy_LEVELS.json",
+        test_levels_or_src=["____________________\n_BWw..............._\n_11w.....G10......._\n_26w..wwwwwwww....._\n_www..woooooow....._\n_.....wooR15ow....._\n_.....woooooow....._\n_.....woborrow....._\n_.....woooooow....._\n_..wwwwwggggwwwww.._\n_..w............w.._\n_..w............w.._\n_..w............w.._\n_..wggg.........w.._\n_..wggg.....F13.w.._\n_..wfgg.........w.._\n_..wwwwwwwwwwwwww.._\n_.................._\n_.................._\n____________________"],
+        #test_levels_or_src="./json_levels/full_biy_LEVELS.json",
         training_levels_or_src=[]
     )
     # Level-2000-node-expansions-Time: "____________________\n_BWw..............._\n_11w.....G10......._\n_26w..wwwwwwww....._\n_www..woooooow....._\n_.....wooR15ow....._\n_.....woooooow....._\n_.....woborrow....._\n_.....woooooow....._\n_..wwwwwggggwwwww.._\n_..w............w.._\n_..w............w.._\n_..w............w.._\n_..wggg.........w.._\n_..wggg.....F13.w.._\n_..wfgg.........w.._\n_..wwwwwwwwwwwwww.._\n_.................._\n_.................._\n____________________"
@@ -25,8 +27,17 @@ def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = Heur
     # 55.86849093437195
     # 56.63122844696045
     # 61.9611120223999
+    # 55.97676873207092
     # Time after logic change:
-    #
+    # 54.91059994697571
+    # 50.44903230667114
+    # 51.17883801460266
+    # With last map:
+    # 57.34898900985718
+    # 53.69271397590637
+    # 53.13639760017395
+    # 54.17276430130005
+    # 52.91572308540344
 
     test_problem.register_and_run_next_generation([representation.deserialize("_")])
     performance_of_instance_on_batch: Dict[Tuple[int, int], float] = test_problem.get_performance_of_instance_on_batch()

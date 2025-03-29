@@ -11,7 +11,6 @@ from Keke_PY.keke_game.keke import GameState, Direction, imgHash, advance_game_s
 from pygame.locals import *
 import pygame
 
-from Keke_PY.search_agents.BFS import BFS
 
 TILE_SIZE = 48
 
@@ -25,14 +24,14 @@ def render_tile(screen, tile, xpos, ypos):
 
 def render_game_state(screen, game_state: GameState):
 
-    for y, row in enumerate(game_state.object_map):
-        for x, tile in enumerate(row):
+    for y in range(game_state.object_map.size[0]):
+        for x in range(game_state.object_map.size[1]):
             # Calculate position for the tile
             x_pos = x * TILE_SIZE
             y_pos = y * TILE_SIZE
 
             # Draw all objects on this tile:
-            for obj in tile:
+            for obj in game_state.object_map.objects_at_position((y, x)):
                 render_tile(screen, obj, x_pos, y_pos)
                 x_pos += 5
                 y_pos += 5

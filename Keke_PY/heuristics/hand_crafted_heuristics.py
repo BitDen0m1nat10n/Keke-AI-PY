@@ -215,11 +215,11 @@ def is_free_or_usable(state: GameState, x: int, y: int, usable_names: List[str])
     @param usable_names is a list of words that are allowed to be at (x,y) for the rule to work
     @return whether the objects at (x,y) do not prevent the rule from being completed
     """
-    if not 0 <= y < len(state.object_map) or not 0 <= x < len(state.object_map[0]):
+    if not 0 <= y < state.object_map.size[0] or not 0 <= x < state.object_map.size[1]:
         return False
     if is_field_empty(state, x, y):
         return True
-    connected_field = state.object_map[y][x]
+    connected_field = state.object_map.objects_at_position((y, x))
     return any(
         obj.__class__ == GameObj and
         obj.object_type in [GameObjectType.Word, GameObjectType.Keyword] and
@@ -237,9 +237,9 @@ def is_field_empty(state: GameState, x: int, y: int) -> bool:
     @return whether the field is empty
     """
     return (
-        0 <= y < len(state.object_map) and
-        0 <= x < len(state.object_map[0]) and
-        state.object_map[y][x]
+        0 <= y < state.object_map.size[0] and
+        0 <= x < state.object_map.size[1] and
+        any(state.object_map.objects_at_position((y, x)))
     )
 
 def is_movable_in_any_axis(state: GameState, x: int, y: int) -> bool:
@@ -293,7 +293,7 @@ def is_direction_blocked(state: GameState, x: int, y: int, direction: Direction)
         x += dx
         y += dy
         search_further: bool = False
-        for obj in state.object_map[y][x]:
+        for obj in state.object_map.objects_at_position((y, x)):
             test: Optional[bool] = is_blocking(obj)
             if test:
                 return True
