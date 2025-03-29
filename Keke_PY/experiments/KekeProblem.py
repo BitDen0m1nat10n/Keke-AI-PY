@@ -4,7 +4,7 @@ import time
 from concurrent.futures import Executor, ProcessPoolExecutor
 from copy import deepcopy
 from itertools import chain
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 
 import numpy as np
 from pymoo.core.problem import Problem
@@ -22,7 +22,7 @@ class KekeProblem(Problem):
     test_batch: List[str]
     all_levels: List[str]
 
-    max_node_expansions: int
+    max_node_expansions: Optional[int]
     max_calculation_time: float
     time_dependent_performance_function: bool
 
@@ -40,7 +40,7 @@ class KekeProblem(Problem):
             self,
             training_batches: List[List[str]],
             representation: HeuristicRepresentation,
-            max_node_expansions: int = 2000,
+            max_node_expansions: Optional[int] = 2000,
             max_calculation_time: float = math.inf,
             time_dependent_performance_function: bool = False,
             executor: Executor = ProcessPoolExecutor(),
@@ -85,8 +85,8 @@ class KekeProblem(Problem):
             training_levels_or_src: Union[List[str], str] = "./json_levels/train_LEVELS.json",
             test_levels_or_src: Union[List[str], str] = "./json_levels/test_LEVELS.json",
             limit_levels: int = None,
-            max_calculation_time = 2.0,
-            max_node_expansions = 2000,
+            max_calculation_time: float = 2.0,
+            max_node_expansions: Optional[int] = 2000,
             time_dependent_performance_function: bool = False,
     ):
         if training_levels_or_src.__class__ == str:
@@ -116,7 +116,7 @@ class KekeProblem(Problem):
         )
 
     def run_as_next_generation(self, instances: [AIInterface]):
-        simulation_data_list: List[Tuple[Tuple[int, AIInterface], str, int, float]] = list(itertools.product(
+        simulation_data_list: List[Tuple[Tuple[int, AIInterface], str, Optional[int], float]] = list(itertools.product(
             enumerate(instances),
             self.all_levels,
             [self.max_node_expansions],
@@ -348,12 +348,12 @@ class KekeProblem(Problem):
 
 
 def evaluate_ai_on_level(
-    simulation_data: Tuple[Tuple[int, AIInterface], str, int, float]
+    simulation_data: Tuple[Tuple[int, AIInterface], str, Optional[int], float]
 ) -> Tuple[Tuple[int, str], Tuple[Union[List[str], None], int, float]]:
     ai_index: int = simulation_data[0][0]
     agent: AIInterface = simulation_data[0][1]
     level: str = simulation_data[1]
-    max_forward_model_calls: int = simulation_data[2]
+    max_forward_model_calls: Optional[int] = simulation_data[2]
     max_calculation_time: float = simulation_data[3]
     start_state: GameState = make_level(parse_map(level))
     start_time: float = time.time()
@@ -366,5 +366,5 @@ def evaluate_ai_on_level(
     )
     end_time: float = time.time()
     #print((ai_index, level), solution[0], solution[0], solution[1], end_time - start_time)
-    print(end_time - start_time, solution[1], solution[0])
+    print(end_time - start_time, solution[1], solution[0]) # TODO: remove
     return (ai_index, level), (solution[0], solution[1], end_time - start_time)
