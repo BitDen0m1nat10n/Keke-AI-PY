@@ -24,6 +24,7 @@ class KekeProblem(Problem):
 
     max_node_expansions: int
     max_calculation_time: float
+    time_dependent_performance_function: bool
 
     executor: Executor
 
@@ -41,6 +42,7 @@ class KekeProblem(Problem):
             representation: HeuristicRepresentation,
             max_node_expansions: int = 2000,
             max_calculation_time: float = math.inf,
+            time_dependent_performance_function: bool = False,
             executor: Executor = ProcessPoolExecutor(),
             test_batch: List[str] = (),
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
@@ -53,6 +55,7 @@ class KekeProblem(Problem):
         self.test_batch = test_batch
         self.max_node_expansions = max_node_expansions
         self.max_calculation_time = max_calculation_time
+        self.time_dependent_performance_function = time_dependent_performance_function
         training_levels = set(chain(*training_batches))
         assert all(level not in training_levels for level in test_batch), "Training on test-levels is not allowed!"
         self.all_levels = sorted(list(training_levels)) + test_batch
@@ -79,20 +82,19 @@ class KekeProblem(Problem):
             representation: HeuristicRepresentation,
             executor: Executor = ProcessPoolExecutor(),
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
-            training_levels_or_src: Union[List[str], str] = None,
-            test_levels_or_src: Union[List[str], str] = None,
+            training_levels_or_src: Union[List[str], str] = "./json_levels/train_LEVELS.json",
+            test_levels_or_src: Union[List[str], str] = "./json_levels/test_LEVELS.json",
             limit_levels: int = None,
+            max_calculation_time = 2.0,
+            max_node_expansions = 2000,
+            time_dependent_performance_function: bool = False,
     ):
-        if training_levels_or_src is None:
-            training_levels_or_src = "./json_levels/train_LEVELS.json"
         if training_levels_or_src.__class__ == str:
             training_levels_or_src = [
                 level["ascii"]
                 for level in load_level_set(training_levels_or_src)["levels"]
             ]
         training_levels: List[str] = training_levels_or_src
-        if test_levels_or_src is None:
-            test_levels_or_src = "./json_levels/test_LEVELS.json"
         if test_levels_or_src.__class__ == str:
             test_levels_or_src = [
                 level["ascii"]
@@ -105,10 +107,12 @@ class KekeProblem(Problem):
         return cls(
             training_batches=[training_levels],
             representation=representation,
-            max_node_expansions=2000,
             executor=executor,
             test_batch=test_levels,
-            agent_factory=agent_factory
+            agent_factory=agent_factory,
+            max_calculation_time=max_calculation_time,
+            max_node_expansions=max_node_expansions,
+            time_dependent_performance_function=time_dependent_performance_function,
         )
 
     def run_as_next_generation(self, instances: [AIInterface]):
@@ -155,10 +159,16 @@ class KekeProblem(Problem):
 
     def get_performance_of_instance_on_batch(
             self,
-            generation: int = -1
+            generation: int = -1,
+            time_dependent: bool = None
     ) -> Dict[Tuple[int, int], float]:
+        if time_dependent is None:
+            time_dependent = self.time_dependent_performance_function
         if generation == -1:
             generation = self.generation - 1
+
+        max_value: float = self.max_calculation_time if time_dependent else self.max_node_expansions
+        value_index: int = 2 if time_dependent else 1
 
         nr_of_instances: int = max(
             key[1]
@@ -174,23 +184,23 @@ class KekeProblem(Problem):
                 if nr_of_levels == 0:
                     performance_of_instance_on_batch[(agent_nr, batch_nr)] = math.nan
                     continue
-                total_expansions: int = sum(
+                value_sum: float = sum(
                     self.past_evaluations_by_gen_index_and_level_id[
                         (generation, agent_nr, self.level_to_id_map[level])
-                    ][1]
+                    ][value_index]
                     for level in batch
                 )
-                average_expansions: float = total_expansions / nr_of_levels
-                average_leftover_expansions: float = self.max_node_expansions - average_expansions
+                average_value: float = value_sum / nr_of_levels
+                average_leftover_value: float = max_value - average_value
                 nr_of_solved_levels: int = sum(
                     self.past_evaluations_by_gen_index_and_level_id[
                         (generation, agent_nr, self.level_to_id_map[level])
                     ][0] is not None
                     for level in batch
                 )
-                ration_of_solved_levels: float = nr_of_solved_levels / nr_of_levels
-                solved_level_bonus: float = ration_of_solved_levels * self.max_node_expansions
-                performance_of_instance_on_batch[(agent_nr, batch_nr)] = average_leftover_expansions + solved_level_bonus
+                ratio_of_solved_levels: float = nr_of_solved_levels / nr_of_levels
+                solved_level_bonus: float = ratio_of_solved_levels * max_value
+                performance_of_instance_on_batch[(agent_nr, batch_nr)] = average_leftover_value + solved_level_bonus
 
         return performance_of_instance_on_batch
 
@@ -241,6 +251,8 @@ class KekeProblem(Problem):
             max_node_expansions: int = 2000,
             executor: Executor = None,
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
+            max_calculation_time: float = 2.0,
+            time_dependent_performance_function: bool = False
     ):
         all_levels: Dict[int, str] = {}
         batches: List[Tuple[int, int, int]] = []
@@ -260,7 +272,7 @@ class KekeProblem(Problem):
             batch: List[str] = test_batch if batch_id == -1 else training_batches[batch_id]
             assert index == len(batch)
             batch.append(all_levels[level_id])
-        res: KekeProblem = cls(training_batches, representation, max_node_expansions, executor, test_batch, agent_factory, True)
+        res: KekeProblem = cls(training_batches, representation, max_node_expansions, max_calculation_time, time_dependent_performance_function, executor, test_batch, agent_factory, True)
         for line in lines:
             if line.startswith("EVAL_INSTANCE:"):
                 _, generation, index, serialized_instance = line.split(':')
@@ -354,5 +366,5 @@ def evaluate_ai_on_level(
     )
     end_time: float = time.time()
     #print((ai_index, level), solution[0], solution[0], solution[1], end_time - start_time)
-    #print(end_time - start_time, solution[1], solution[0])
+    print(end_time - start_time, solution[1], solution[0])
     return (ai_index, level), (solution[0], solution[1], end_time - start_time)
