@@ -12,7 +12,12 @@ from Keke_PY.heuristic_pymoo_representations.WeightedHeuristicSumRepresentation 
     WeightedHeuristicSumRepresentation
 
 
-file_name_template: str = "soo_100_gen_tree_run_JOB_TREES-out.txt"
+file_name_template: str = "/".join([
+    "Keke_PY",
+    "experiment_logs",
+    "linear_vs_trees__time_independent__long_comparison__60%train_40%test",
+    "soo_100_gen_tree_run_JOB_TREES-out.txt"
+])
 
 linear_setups: List[Tuple[bool, bool, int]] = [
     (False, True, 553986),
@@ -24,6 +29,8 @@ linear_setups: List[Tuple[bool, bool, int]] = [
     #(False, True, 564553),
     (False, True, 564554),
     (False, True, 564555),
+    (False, True, 564556),
+    (False, True, 564557),
 ]
 tree_setups: List[Tuple[bool, bool, int]] = [
     (True, True, 553986),
@@ -34,6 +41,9 @@ tree_setups: List[Tuple[bool, bool, int]] = [
     (True, True, 564552),
     (True, True, 564553),
     (True, True, 564554),
+    (True, True, 564555),
+    (True, True, 564556),
+    (True, True, 564557),
 ]
 
 def get_synopsis(
