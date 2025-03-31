@@ -14,8 +14,8 @@ def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = Heur
     test_problem = KekeProblem.default_problem(
         representation,
         multiprocessing.Pool(4),
-        max_node_expansions=10000,
-        max_calculation_time=10.0,
+        max_node_expansions=None,
+        max_calculation_time=2.0,
         time_dependent_performance_function=True,
         agent_factory=agent_factory,
         #test_levels_or_src="./json_levels/full_biy_LEVELS.json",
