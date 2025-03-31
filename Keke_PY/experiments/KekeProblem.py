@@ -85,7 +85,7 @@ class KekeProblem(Problem):
             training_levels_or_src: Union[List[str], str] = "./json_levels/train_LEVELS.json",
             test_levels_or_src: Union[List[str], str] = "./json_levels/test_LEVELS.json",
             limit_levels: int = None,
-            max_calculation_time: float = 2.0,
+            max_calculation_time: float = math.inf,
             max_node_expansions: Optional[int] = 2000,
             time_dependent_performance_function: bool = False,
     ):
@@ -366,5 +366,5 @@ def evaluate_ai_on_level(
     )
     end_time: float = time.time()
     #print((ai_index, level), solution[0], solution[0], solution[1], end_time - start_time)
-    print(end_time - start_time, solution[1], solution[0]) # TODO: remove
+    #print(end_time - start_time, solution[1], solution[0])
     return (ai_index, level), (solution[0], solution[1], end_time - start_time)

@@ -1,9 +1,11 @@
+import math
 import multiprocessing
 from typing import Tuple, Dict, Union, List
 
 from Keke_PY.experiments.KekeProblem import KekeProblem
 from Keke_PY.heuristic_pymoo_representations.DummyRepresentation import DummyRepresentation
 from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
+from Keke_PY.heuristics.SimpleHeuristic import SimpleHeuristic
 from Keke_PY.heuristics.ZeroHeuristic import ZeroHeuristic
 from Keke_PY.search_agents.HeuristicGuidedSearch import HeuristicGuidedSearch
 from Keke_PY.search_agents.ai_interface import AgentFromPolicy
@@ -14,9 +16,9 @@ def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = Heur
     test_problem = KekeProblem.default_problem(
         representation,
         multiprocessing.Pool(4),
-        max_node_expansions=None,
-        max_calculation_time=2.0,
-        time_dependent_performance_function=True,
+        max_node_expansions=2000,
+        max_calculation_time=math.inf,
+        time_dependent_performance_function=False,
         agent_factory=agent_factory,
         #test_levels_or_src="./json_levels/full_biy_LEVELS.json",
         #training_levels_or_src=[],
@@ -48,4 +50,4 @@ def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = Heur
 
 if __name__ == "__main__":
 
-    eval_single_heuristic(ZeroHeuristic())
+    eval_single_heuristic(SimpleHeuristic())

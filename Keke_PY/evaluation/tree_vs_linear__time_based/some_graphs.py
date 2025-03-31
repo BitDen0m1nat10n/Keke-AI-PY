@@ -12,7 +12,10 @@ from Keke_PY.heuristic_pymoo_representations.WeightedHeuristicSumRepresentation 
     WeightedHeuristicSumRepresentation
 
 
-file_name_template: str = "TreeVsLinear_TimeBased_40Gens_2sec_JOB_TREES-out.txt"
+file_name_template: str = "/".join([
+    "Keke_PY", "experiment_logs", "small_time_dependent_test_50gens_2sec",
+    "TreeVsLinear_TimeBased_50Gens_2sec_JOB_TREES-out.txt"
+])
 
 linear_setups: List[Tuple[bool, bool, int]] = [
     (False, True, 585903),
@@ -33,7 +36,7 @@ def get_synopsis(
     if tracked:
         representation = TrackedRepresentation(representation)
         representation.load_from_lines(log_lines)
-    problem_data: KekeProblem = KekeProblem.from_log_lines(representation, log_lines)
+    problem_data: KekeProblem = KekeProblem.from_log_lines(representation, log_lines, time_dependent_performance_function=True)
     timeline: List[Tuple[int, Tuple[int, int]]] = get_best_instance_on_batch_timeline(problem_data, select_best_by_batch)
     plot_data: List[Tuple[int, Dict[int, float]]] = get_all_performances_from_timeline(problem_data, timeline)
     individual: np.ndarray = problem_data.past_instances_by_gen_and_index[timeline[-1][1]]
@@ -92,8 +95,8 @@ if __name__ == "__main__":
     plt.style.use('_mpl-gallery')
     fig, ax = plt.subplots()
     ax.set(
-        xlim=(0, 40),
-        ylim=(0, 4000),
+        xlim=(0, 50),
+        ylim=(0, 4.0),
     )
     plot_distr(ax, linear_runs, -1, "blue")
     plot_distr(ax, tree_runs, -1, "green")
@@ -103,8 +106,8 @@ if __name__ == "__main__":
     plt.style.use('_mpl-gallery')
     fig, ax = plt.subplots()
     ax.set(
-        xlim=(0, 40),
-        ylim=(0, 4000),
+        xlim=(0, 50),
+        ylim=(0, 4.0),
     )
     plot_distr(ax, linear_runs, 0, "blue")
     plot_distr(ax, tree_runs, 0, "green")
