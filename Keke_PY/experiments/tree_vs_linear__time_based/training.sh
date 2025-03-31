@@ -3,12 +3,12 @@
 #SBATCH --job-name=TreeVsLinear_TimeBased_40Gens_2sec
 #SBATCH --mail-user=rongero@tnt.uni-hannover.de
 #SBATCH --mail-type=ALL
-#SBATCH --partition=cpu_normal_stud
+#SBATCH --partition=cpu_long_stud
 
 #SBATCH --array=0-1
 #SBATCH --cpus-per-task=20
 #SBATCH --mem-per-cpu=4G
-#SBATCH --time=0-5 # Days_hours
+#SBATCH --time=5-0 # Days_hours
 #SBATCH --output=TreeVsLinear_TimeBased_50Gens_2sec_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
 
 

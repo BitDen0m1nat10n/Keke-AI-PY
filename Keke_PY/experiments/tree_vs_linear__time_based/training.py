@@ -47,7 +47,7 @@ test_problem = KekeProblem.default_problem(
     training_levels_or_src = "./json_levels/train_LEVELS.json",
     test_levels_or_src = "./json_levels/test_LEVELS.json",
     limit_levels = None,
-    max_calculation_time = 2.0,
+    max_calculation_time = 60.0,
     max_node_expansions = None,
     time_dependent_performance_function = True,
 )
