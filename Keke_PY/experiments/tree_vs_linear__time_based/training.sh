@@ -16,7 +16,9 @@
 #source setup_on_my_laptop.sh
 source setup_on_cluster.sh
 
-
+echo "RUNNING ON FOLLOWING DEVICE:"
+echo $SLURMD_NODENAME
+echo ""
 
 # Change to my work dir
 # SLURM_SUBMIT_DIR is an environment variable that automatically gets

@@ -17,6 +17,11 @@
 source setup_on_cluster.sh
 
 
+echo "RUNNING ON FOLLOWING DEVICE:"
+echo $SLURMD_NODENAME
+echo ""
+
+
 
 cd $SLURM_SUBMIT_DIR
 
