@@ -1,17 +1,28 @@
+if True:
+    """Include Project root as Environment paths:"""
+    from os.path import dirname, abspath
+    import sys
+    sys.path.append(dirname(dirname(dirname(abspath(__file__)))))
+
+
 import math
 import multiprocessing
-from typing import Tuple, Dict, Union, List
+from typing import Tuple, Dict, Union, List, Optional
 
 from Keke_PY.experiments.KekeProblem import KekeProblem
 from Keke_PY.heuristic_pymoo_representations.DummyRepresentation import DummyRepresentation
 from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
 from Keke_PY.heuristics.SimpleHeuristic import SimpleHeuristic
-from Keke_PY.heuristics.ZeroHeuristic import ZeroHeuristic
 from Keke_PY.search_agents.HeuristicGuidedSearch import HeuristicGuidedSearch
 from Keke_PY.search_agents.ai_interface import AgentFromPolicy
 
 
-def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory()) -> Dict[int, float]:
+def eval_single_heuristic(
+        heur: Heuristic,
+        test_level_src: str = "./json_levels/full_biy_LEVELS.json",
+        agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
+        logging_prefix: Optional[str] = "",
+) -> Dict[int, float]:
     representation = DummyRepresentation(heur)
     test_problem = KekeProblem.default_problem(
         representation,
@@ -20,8 +31,9 @@ def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = Heur
         max_calculation_time=math.inf,
         time_dependent_performance_function=False,
         agent_factory=agent_factory,
-        #test_levels_or_src="./json_levels/full_biy_LEVELS.json",
-        #training_levels_or_src=[],
+        test_levels_or_src=test_level_src,
+        training_levels_or_src=[],
+        logging_prefix=logging_prefix,
     )
     # Level-2000-node-expansions-Time: "____________________\n_BWw..............._\n_11w.....G10......._\n_26w..wwwwwwww....._\n_www..woooooow....._\n_.....wooR15ow....._\n_.....woooooow....._\n_.....woborrow....._\n_.....woooooow....._\n_..wwwwwggggwwwww.._\n_..w............w.._\n_..w............w.._\n_..w............w.._\n_..wggg.........w.._\n_..wggg.....F13.w.._\n_..wfgg.........w.._\n_..wwwwwwwwwwwwww.._\n_.................._\n_.................._\n____________________"
     # TODO: check for possible time-improvement?
@@ -33,17 +45,17 @@ def eval_single_heuristic(heur: Heuristic, agent_factory: AgentFromPolicy = Heur
 
     performances: Dict[int, float] = dict((key[1], value) for key, value in performance_of_instance_on_batch.items())
 
-    print(performances)
+    if logging_prefix is not None:
+        print(logging_prefix + f"performance: {performances}")
 
-    if True:
         data: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int]] = test_problem.past_evaluations_by_gen_index_and_level_id
 
         level_count: int = len(data.items())
         solved_level_count: int = sum(solution is not None for _, (solution, _, _) in data.items())
         total_node_expansions: int = sum(node_expansions for _, (_, node_expansions, _) in data.items())
         total_calculation_time: float = sum(calculation_time for _, (_, _, calculation_time) in data.items())
-        print(level_count, solved_level_count, total_node_expansions, total_calculation_time)
-        print(solved_level_count / level_count, total_node_expansions / level_count, total_calculation_time / level_count)
+        print(logging_prefix + f"level_count:{level_count}, solved_level_count:{solved_level_count}, total_node_expansions:{total_node_expansions}, total_calculation_time:{total_calculation_time}")
+        print(logging_prefix + f"solving ration:{solved_level_count / level_count}, avg node expansions:{total_node_expansions / level_count}, avg time per level:{total_calculation_time / level_count}")
 
 
     return performances

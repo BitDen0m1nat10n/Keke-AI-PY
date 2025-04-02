@@ -18,7 +18,8 @@ from Keke_PY.experiments.KekeProblem import KekeProblem
 from Keke_PY.heuristic_pymoo_representations.HeuristicTreeRepresentation import HeuristicTreeRepresentation
 from Keke_PY.heuristic_pymoo_representations.TrackedRepresentation import TrackedRepresentation
 from Keke_PY.heuristic_pymoo_representations.WeightedHeuristicSumRepresentation import WeightedHeuristicSumRepresentation
-
+from Keke_PY.experiments.eval_single_heuristic import eval_single_heuristic
+from Keke_PY.heuristics.SimpleHeuristic import SimpleHeuristic
 
 int_arguments: List[int] = []
 for argument in sys.argv:
@@ -60,6 +61,9 @@ def measure_time() -> Iterable[None]:
     print("The time of execution is:", (end - start), "s")
 
 if __name__ == '__main__':
+
+    eval_single_heuristic(SimpleHeuristic(), test_level_src="./json_levels/test_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TEST_SET__")
+    eval_single_heuristic(SimpleHeuristic(), test_level_src="./json_levels/train_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TRAIN_SET__")
 
     for _ in measure_time():
         info: List = [optimization_algorithm, representation, agent_factory]

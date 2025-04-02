@@ -35,6 +35,8 @@ class KekeProblem(Problem):
     past_instances_by_gen_and_index: Dict[Tuple[int, int], np.ndarray]
     past_evaluations_by_gen_index_and_level_id: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int, float]]
 
+    logging_prefix: Optional[str]
+
 
     def __init__(
             self,
@@ -46,7 +48,8 @@ class KekeProblem(Problem):
             executor: Executor = ProcessPoolExecutor(),
             test_batch: List[str] = (),
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
-            silent: bool = False
+            silent: bool = False,
+            logging_prefix: Optional[str] = ""
     ):
         self.generation = 0
         self.past_instances_by_gen_and_index = {}
@@ -63,6 +66,7 @@ class KekeProblem(Problem):
         self.representation = representation
         self.executor = executor
         self.agent_factory = agent_factory
+        self.logging_prefix = logging_prefix
 
         problem_data: Problem = representation.get_problem_data()
         super().__init__(
@@ -88,6 +92,7 @@ class KekeProblem(Problem):
             max_calculation_time: float = math.inf,
             max_node_expansions: Optional[int] = 2000,
             time_dependent_performance_function: bool = False,
+            logging_prefix: Optional[str] = ""
     ):
         if training_levels_or_src.__class__ == str:
             training_levels_or_src = [
@@ -113,6 +118,7 @@ class KekeProblem(Problem):
             max_calculation_time=max_calculation_time,
             max_node_expansions=max_node_expansions,
             time_dependent_performance_function=time_dependent_performance_function,
+            logging_prefix=logging_prefix,
         )
 
     def run_as_next_generation(self, instances: [AIInterface]):
@@ -228,10 +234,12 @@ class KekeProblem(Problem):
 
 
     def log_line(self, line: str):
+        if self.logging_prefix is None:
+            return
         # TODO: the following line should be done by the caller
         line = line.replace('\\','\\\\').replace('\n', '\\n')
         assert len(line.split('\n')) == 1
-        print(line)
+        print(self.logging_prefix + line)
 
 
     def log_level_data(self):
@@ -252,15 +260,19 @@ class KekeProblem(Problem):
             executor: Executor = None,
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
             max_calculation_time: float = 2.0,
-            time_dependent_performance_function: bool = False
+            time_dependent_performance_function: bool = False,
+            logging_prefix: str = "",
+            new_logging_prefix: Optional[str] = 0 # wrong type => copy from logging_prefix [since None is valid type]
     ):
+        if new_logging_prefix.__class__ != str and new_logging_prefix is not None:
+            new_logging_prefix = logging_prefix
         all_levels: Dict[int, str] = {}
         batches: List[Tuple[int, int, int]] = []
         for line in lines:
-            if line.startswith("LEVEL:"):
+            if line.startswith(logging_prefix + "LEVEL:"):
                 _, level_id, level = line.split(':')
                 all_levels[int(level_id)] = level.strip().replace('\\n', '\n')
-            elif line.startswith("BATCH:"):
+            elif line.startswith(logging_prefix + "BATCH:"):
                 _, batch_id, index, level_id = line.split(':')
                 batches.append((int(batch_id), int(index), int(level_id)))
         training_batches: List[List[str]] = []
@@ -272,14 +284,20 @@ class KekeProblem(Problem):
             batch: List[str] = test_batch if batch_id == -1 else training_batches[batch_id]
             assert index == len(batch)
             batch.append(all_levels[level_id])
-        res: KekeProblem = cls(training_batches, representation, max_node_expansions, max_calculation_time, time_dependent_performance_function, executor, test_batch, agent_factory, True)
+        res: KekeProblem = cls(
+            training_batches, representation,
+            max_node_expansions, max_calculation_time,
+            time_dependent_performance_function,
+            executor, test_batch, agent_factory,
+            True, new_logging_prefix
+        )
         for line in lines:
-            if line.startswith("EVAL_INSTANCE:"):
+            if line.startswith(logging_prefix + "EVAL_INSTANCE:"):
                 _, generation, index, serialized_instance = line.split(':')
                 res.past_instances_by_gen_and_index.update(
                     [((int(generation), int(index)), representation.deserialize(serialized_instance))])
                 res.generation = max(res.generation, int(generation) + 1)
-            if line.startswith("RUN_RESULT:"):
+            if line.startswith(logging_prefix + "RUN_RESULT:"):
                 _, generation, index, old_level_id, *result = line.split(':')
                 new_level_id: int = res.level_to_id_map[all_levels[int(old_level_id)]]
                 solution: Union[List[str], None]
