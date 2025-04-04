@@ -1,6 +1,0 @@
-RUNNING ON FOLLOWING DEVICE:
-cc1l01
-
-pygame 2.2.0 (SDL 2.30.7, Python 3.8.10)
-Hello from the pygame community. https://www.pygame.org/contribute.html
-slurmstepd: error: *** JOB 592455 ON cc1l01 CANCELLED AT 2025-04-02T18:28:12 ***
