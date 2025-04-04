@@ -276,7 +276,8 @@ class KekeProblem(Problem):
             max_calculation_time: float = 2.0,
             time_dependent_performance_function: bool = False,
             logging_prefix: str = "",
-            new_logging_prefix: Optional[str] = 0 # wrong type => copy from logging_prefix [since None is valid type]
+            new_logging_prefix: Optional[str] = 0, # wrong type => copy from logging_prefix [since None is valid type]
+            silent: bool = True
     ):
         if new_logging_prefix.__class__ != str and new_logging_prefix is not None:
             new_logging_prefix = logging_prefix
@@ -303,7 +304,7 @@ class KekeProblem(Problem):
             max_node_expansions, max_calculation_time,
             time_dependent_performance_function,
             executor, test_batch, agent_factory,
-            True, new_logging_prefix
+            silent, new_logging_prefix
         )
         for line in lines:
             if line.startswith(logging_prefix + "EVAL_INSTANCE:"):
@@ -311,6 +312,8 @@ class KekeProblem(Problem):
                 res.past_instances_by_gen_and_index.update(
                     [((int(generation), int(index)), representation.deserialize(serialized_instance))])
                 res.generation = max(res.generation, int(generation) + 1)
+                if not silent:
+                    res.log_line(f"EVAL_INSTANCE:{generation}:{index}:{serialized_instance}")
             if line.startswith(logging_prefix + "RUN_RESULT:"):
                 _, generation, index, old_level_id, *result = line.split(':')
                 new_level_id: int = res.level_to_id_map[all_levels[int(old_level_id)]]
@@ -328,7 +331,7 @@ class KekeProblem(Problem):
                     else:
                         assert result.isdigit(), f"Unexpected value in '{result}'"
                         node_expansions = int(result)
-                        solution = ["solution was not logged"]
+                        solution = ["?solution was not logged?"]
                     calculation_time = math.nan
                 elif len(result) == 2:
                     # logging node_expansions and solution/"----"
@@ -359,6 +362,9 @@ class KekeProblem(Problem):
                     (int(generation), int(index), new_level_id),
                     result
                 )])
+                if not silent:
+                    solution_str: str = '----' if solution is None else ''.join(sol[0] for sol in solution)
+                    res.log_line(f"RUN_RESULT:{generation}:{index}:{new_level_id}:{node_expansions}:{calculation_time}:{solution_str}")
         return res
 
     def log_generation_data(self, x: list):
@@ -366,9 +372,9 @@ class KekeProblem(Problem):
             self.log_line(f"EVAL_INSTANCE:{self.generation}:{index}:{self.representation.serialize(instance)}")
 
     def log_simulation_data(self, simulation_results: Dict[Tuple[int, str], Tuple[Union[List[str], None], int, float]]):
-        for (index, level), (solution, forward_model_calls, calc_time) in simulation_results.items():
+        for (index, level), (solution, node_expansions, calc_time) in simulation_results.items():
             solution_str: str = '----' if solution is None else ''.join(sol[0] for sol in solution)
-            self.log_line(f"RUN_RESULT:{self.generation}:{index}:{self.level_to_id_map[level]}:{forward_model_calls}:{calc_time}:{solution_str}")
+            self.log_line(f"RUN_RESULT:{self.generation}:{index}:{self.level_to_id_map[level]}:{node_expansions}:{calc_time}:{solution_str}")
 
     def log_performances(self, performance_of_instance_on_batch: Dict[Tuple[int, int], float]):
         nr_of_instances: int = max(key[0] for key in performance_of_instance_on_batch.keys()) + 1
@@ -385,13 +391,13 @@ def evaluate_ai_on_level(
     ai_index: int = simulation_data[0][0]
     agent: AIInterface = simulation_data[0][1]
     level: str = simulation_data[1]
-    max_forward_model_calls: Optional[int] = simulation_data[2]
+    max_node_expansions: Optional[int] = simulation_data[2]
     max_calculation_time: float = simulation_data[3]
     start_state: GameState = make_level(parse_map(level))
     start_time: float = time.time()
     solution: Tuple[Union[List[str], None], int] = agent.search(
         start_state,
-        max_forward_model_calls,
+        max_node_expansions,
         None,
         max_calculation_time,
         False
