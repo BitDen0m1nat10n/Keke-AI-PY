@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=TreeVsLinear_TimeBased_40Gens_2sec
+#SBATCH --job-name=TreeVsLinear_TimeBased_50Gens_2sec
 #SBATCH --mail-user=rongero@tnt.uni-hannover.de
 #SBATCH --mail-type=ALL
 #SBATCH --partition=cpu_long_stud

@@ -26,10 +26,10 @@ def eval_single_heuristic(
     representation = DummyRepresentation(heur)
     test_problem = KekeProblem.default_problem(
         representation,
-        multiprocessing.Pool(4),
-        max_node_expansions=2000,
-        max_calculation_time=math.inf,
-        time_dependent_performance_function=False,
+        multiprocessing.Pool(20),
+        max_node_expansions=None,
+        max_calculation_time=60.0,
+        time_dependent_performance_function=True,
         agent_factory=agent_factory,
         test_levels_or_src=test_level_src,
         training_levels_or_src=[],
