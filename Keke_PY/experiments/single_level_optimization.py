@@ -97,7 +97,7 @@ if __name__ == '__main__':
     print("\nTRAINING DONE\n")
     print("\n-----!!!NEW PROBLEM!!!-----\n")
 
-    best_individual_index: Tuple[int, int] = max(training_problem.get_best_past_individuals(0))
+    best_individual_index: Tuple[int, int] = max(training_problem.get_best_past_individuals_generation_nrs_and_indices(0))
 
     print("\nSTART TESTING\n")
 

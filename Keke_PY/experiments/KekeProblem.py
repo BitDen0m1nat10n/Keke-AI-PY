@@ -166,15 +166,15 @@ class KekeProblem(Problem):
     def get_performance_of_instance_on_batch(
             self,
             generation: int = -1,
-            time_dependent: bool = None
+            override_time_dependence_for_fitness: bool = None,
     ) -> Dict[Tuple[int, int], float]:
-        if time_dependent is None:
-            time_dependent = self.time_dependent_performance_function
+        if override_time_dependence_for_fitness is None:
+            override_time_dependence_for_fitness = self.time_dependent_performance_function
         if generation == -1:
             generation = self.generation - 1
 
-        max_value: float = self.max_calculation_time if time_dependent else self.max_node_expansions
-        value_index: int = 2 if time_dependent else 1
+        max_value: float = self.max_calculation_time if override_time_dependence_for_fitness else self.max_node_expansions
+        value_index: int = 2 if override_time_dependence_for_fitness else 1
 
         nr_of_instances: int = max(
             key[1]
@@ -210,17 +210,24 @@ class KekeProblem(Problem):
 
         return performance_of_instance_on_batch
 
-    def get_performances_of_all_generations_instances_and_batches(self) -> Dict[Tuple[int, int, int], float]:
+    def get_performances_of_all_generations_instances_and_batches(
+            self,
+            override_time_dependence_for_fitness: bool = None,
+    ) -> Dict[Tuple[int, int, int], float]:
         res: Dict[Tuple[int, int, int], float] = {}
         for generation in range(self.generation):
             res.update(
                 ((generation, index, batch), performance)
-                for (index, batch), performance in self.get_performance_of_instance_on_batch(generation).items()
+                for (index, batch), performance in self.get_performance_of_instance_on_batch(generation, override_time_dependence_for_fitness).items()
             )
         return res
 
-    def get_best_past_individuals(self, batch: int = 0) -> List[Tuple[int, int]]:
-        performances: Dict[Tuple[int, int, int], float] = self.get_performances_of_all_generations_instances_and_batches()
+    def get_best_past_individuals_generation_nrs_and_indices(
+            self,
+            batch: int = 0,
+            override_time_dependence_for_fitness: bool = None,
+    ) -> List[Tuple[int, int]]:
+        performances: Dict[Tuple[int, int, int], float] = self.get_performances_of_all_generations_instances_and_batches(override_time_dependence_for_fitness)
         best_instances: List[Tuple[int, int]] = []
         best_performance: float = -math.inf
         for (generation, index, batch_nr), performance in performances.items():
@@ -231,6 +238,13 @@ class KekeProblem(Problem):
                 elif performance == best_performance:
                     best_instances.append((generation, index))
         return best_instances
+
+    def total_evaluation_time_per_generation(self) -> List[float]:
+        res: List[float] = [0.0] * self.generation
+        for (gen, _, _), (_, _, search_time) in self.past_evaluations_by_gen_index_and_level_id.items():
+            res[gen] += search_time
+        return res
+
 
 
     def log_line(self, line: str):
