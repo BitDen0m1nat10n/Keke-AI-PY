@@ -42,13 +42,13 @@ def show_training_graph(
         representation = TrackedRepresentation(representation)
         representation.load_from_lines(log_lines)
     problem_data: KekeProblem = KekeProblem.from_log_lines(representation, log_lines)
-    plot_data: List[Tuple[int, float]] = get_performance_graph_from_timeline(
+    plot_data: List[Tuple[float, float]] = get_performance_graph_from_timeline(
         problem_data,
         get_best_instance_on_batch_timeline(problem_data, select_best_by_batch),
         show_performance_on_batch
     )
 
-    plot_points: List[Tuple[int, float]] = [(0, 0.0)]
+    plot_points: List[Tuple[float, float]] = [(0, 0.0)]
     for i, (iterations, performance) in enumerate(plot_data):
         plot_points.append((iterations, plot_points[-1][1]))
         plot_points.append((iterations, performance))

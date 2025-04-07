@@ -32,6 +32,7 @@ class KekeProblem(Problem):
     agent_factory: AgentFromPolicy
 
     generation: int
+    last_generation_x: Optional[np.ndarray]
     past_instances_by_gen_and_index: Dict[Tuple[int, int], np.ndarray]
     past_evaluations_by_gen_index_and_level_id: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int, float]]
 
@@ -52,6 +53,7 @@ class KekeProblem(Problem):
             logging_prefix: Optional[str] = ""
     ):
         self.generation = 0
+        self.last_generation_x = None
         self.past_instances_by_gen_and_index = {}
         self.past_evaluations_by_gen_index_and_level_id = {}
         self.training_batches = training_batches
@@ -137,6 +139,10 @@ class KekeProblem(Problem):
         self.generation += 1
 
     def register_and_run_next_generation(self, instances: [np.ndarray]):
+
+        if instances == self.last_generation_x:
+            return
+        self.last_generation_x = instances
 
         self.log_generation_data(list(instances))
         self.past_instances_by_gen_and_index.update(((self.generation, index), deepcopy(instance)) for index, instance in enumerate(instances))
@@ -245,6 +251,26 @@ class KekeProblem(Problem):
             res[gen] += search_time
         return res
 
+    def get_generation_for_initialization_of_training(
+            self,
+            generation: int = -1
+    ) -> np.ndarray:
+        if generation == -1:
+            generation = self.generation - 1
+        instances_of_generation_by_index: Dict[int, np.ndarray] = dict(
+            (index, instance)
+            for (gen, index), instance in self.past_instances_by_gen_and_index.items()
+            if gen == generation
+        )
+        instances_of_generation: List[np.ndarray] = [
+            instances_of_generation_by_index[index]
+            for index in range(len(instances_of_generation_by_index))
+        ]
+        res = np.array(instances_of_generation)
+        if generation == self.generation - 1:
+            self.last_generation_x = res
+        return res
+
 
 
     def log_line(self, line: str):
@@ -270,7 +296,7 @@ class KekeProblem(Problem):
             cls,
             representation: HeuristicRepresentation,
             lines: List[str],
-            max_node_expansions: int = 2000,
+            max_node_expansions: Optional[int] = 2000,
             executor: Executor = None,
             agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
             max_calculation_time: float = 2.0,

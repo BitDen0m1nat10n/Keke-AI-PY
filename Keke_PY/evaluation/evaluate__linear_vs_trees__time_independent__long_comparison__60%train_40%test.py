@@ -3,7 +3,7 @@ from typing import Tuple, List, Dict, Callable
 import numpy as np
 from matplotlib import pyplot as plt
 
-from Keke_PY.evaluation.evaluation import get_performance_graph_from_timeline, get_best_instance_on_batch_timeline, \
+from Keke_PY.evaluation.evaluation import get_best_instance_on_batch_timeline, \
     get_all_performances_from_timeline
 from Keke_PY.experiments.KekeProblem import KekeProblem
 from Keke_PY.heuristic_pymoo_representations.HeuristicTreeRepresentation import HeuristicTreeRepresentation
@@ -49,7 +49,7 @@ tree_setups: List[Tuple[bool, bool, int]] = [
 def get_synopsis(
         trees: bool, tracked: bool, job_nr: int,
         select_best_by_batch: int = 0, show_performance_on_batch: int = -1,
-) -> Tuple[List[Tuple[int, Dict[int, float]]], str]:
+) -> Tuple[List[Tuple[float, Dict[int, float]]], str]:
     file_name: str = file_name_template.replace("JOB", str(job_nr)).replace("TREES", str(int(trees)))
     print(f"reading in data for '{file_name}'")
     with open(file_name) as file:
@@ -59,8 +59,8 @@ def get_synopsis(
         representation = TrackedRepresentation(representation)
         representation.load_from_lines(log_lines)
     problem_data: KekeProblem = KekeProblem.from_log_lines(representation, log_lines)
-    timeline: List[Tuple[int, Tuple[int, int]]] = get_best_instance_on_batch_timeline(problem_data, select_best_by_batch)
-    plot_data: List[Tuple[int, Dict[int, float]]] = get_all_performances_from_timeline(problem_data, timeline)
+    timeline: List[Tuple[float, Tuple[int, int]]] = get_best_instance_on_batch_timeline(problem_data, select_best_by_batch)
+    plot_data: List[Tuple[float, Dict[int, float]]] = get_all_performances_from_timeline(problem_data, timeline)
     individual: np.ndarray = problem_data.past_instances_by_gen_and_index[timeline[-1][1]]
     if tracked:
         return plot_data, representation.serialize_untracked(individual)
@@ -69,7 +69,7 @@ def get_synopsis(
 
 
 def stretch_from_points(
-        data: List[Tuple[int, Dict[int, float]]],
+        data: List[Tuple[float, Dict[int, float]]],
         step_size: int = 10,
 ) -> List[Dict[int, float]]:
     last_data_point: Dict[int, float] = None
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     ]
 
     plt.style.use('_mpl-gallery')
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     ax.set(
         xlim=(0, 100),
         ylim=(0, 4000),
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
 
     plt.style.use('_mpl-gallery')
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     ax.set(
         xlim=(0, 100),
         ylim=(0, 4000),
