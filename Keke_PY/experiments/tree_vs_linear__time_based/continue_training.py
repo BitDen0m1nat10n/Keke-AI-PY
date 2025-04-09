@@ -41,7 +41,6 @@ representation = TrackedRepresentation(
 
 agent_factory = HeuristicGuidedSearch.GuidedSearchFactory()
 
-optimization_algorithm: Algorithm = GA(pop_size=pop_size, **representation.algorithm_arguments())
 
 with open(file_name) as file:
     log_lines: List[str] = file.readlines()
@@ -55,6 +54,14 @@ test_problem = KekeProblem.from_log_lines(
     60.0,
     True,
     silent=False
+)
+
+
+optimization_algorithm: Algorithm = GA(
+    pop_size=pop_size,
+    **representation.algorithm_arguments(
+        first_generation=test_problem.get_last_generation()
+    )
 )
 
 

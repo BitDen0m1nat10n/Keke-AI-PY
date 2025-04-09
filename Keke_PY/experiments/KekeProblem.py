@@ -32,7 +32,7 @@ class KekeProblem(Problem):
     agent_factory: AgentFromPolicy
 
     generation: int
-    last_generation_x: Optional[np.ndarray]
+    try_continue_from_last_generation: bool
     past_instances_by_gen_and_index: Dict[Tuple[int, int], np.ndarray]
     past_evaluations_by_gen_index_and_level_id: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int, float]]
 
@@ -53,7 +53,7 @@ class KekeProblem(Problem):
             logging_prefix: Optional[str] = ""
     ):
         self.generation = 0
-        self.last_generation_x = None
+        self.try_continue_from_last_generation = False
         self.past_instances_by_gen_and_index = {}
         self.past_evaluations_by_gen_index_and_level_id = {}
         self.training_batches = training_batches
@@ -140,9 +140,10 @@ class KekeProblem(Problem):
 
     def register_and_run_next_generation(self, instances: [np.ndarray]):
 
-        if instances == self.last_generation_x:
+        if self.is_continuation(instances):
+            self.log_line("RESTART FROM PREVIOUS GENERATION DETECTED => SIMULATION WILL BE SKIPPED; RESULTS FROM PREVIOUS SIMULATION ARE RETURNED TO CALLER")
+            self.try_continue_from_last_generation = False
             return
-        self.last_generation_x = instances
 
         self.log_generation_data(list(instances))
         self.past_instances_by_gen_and_index.update(((self.generation, index), deepcopy(instance)) for index, instance in enumerate(instances))
@@ -251,25 +252,38 @@ class KekeProblem(Problem):
             res[gen] += search_time
         return res
 
-    def get_generation_for_initialization_of_training(
-            self,
-            generation: int = -1
+    def get_last_generation(
+            self
     ) -> np.ndarray:
-        if generation == -1:
-            generation = self.generation - 1
         instances_of_generation_by_index: Dict[int, np.ndarray] = dict(
             (index, instance)
             for (gen, index), instance in self.past_instances_by_gen_and_index.items()
-            if gen == generation
+            if gen == self.generation - 1
         )
         instances_of_generation: List[np.ndarray] = [
             instances_of_generation_by_index[index]
             for index in range(len(instances_of_generation_by_index))
         ]
         res = np.array(instances_of_generation)
-        if generation == self.generation - 1:
-            self.last_generation_x = res
+        self.try_continue_from_last_generation = True
         return res
+
+    def is_continuation(self, instances: [np.ndarray]) -> bool:
+        if not self.try_continue_from_last_generation:
+            return False
+        if (self.generation - 1, len(instances)) in self.past_instances_by_gen_and_index:
+            return False
+        for index, instance in enumerate(instances):
+            past_instance: Optional[np.ndarray] = self.past_instances_by_gen_and_index.get(
+                (self.generation - 1, index),
+                None
+            )
+            if past_instance is None:
+                return False
+            if (instance != past_instance).all():
+                return False
+        return True
+
 
 
 
@@ -339,7 +353,7 @@ class KekeProblem(Problem):
                     [((int(generation), int(index)), representation.deserialize(serialized_instance))])
                 res.generation = max(res.generation, int(generation) + 1)
                 if not silent:
-                    res.log_line(f"EVAL_INSTANCE:{generation}:{index}:{serialized_instance}")
+                    res.log_line(f"EVAL_INSTANCE:{generation}:{index}:{serialized_instance[:-1]}")
             if line.startswith(logging_prefix + "RUN_RESULT:"):
                 _, generation, index, old_level_id, *result = line.split(':')
                 new_level_id: int = res.level_to_id_map[all_levels[int(old_level_id)]]

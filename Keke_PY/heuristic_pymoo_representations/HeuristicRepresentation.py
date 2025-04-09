@@ -42,11 +42,16 @@ class HeuristicRepresentation(ABC):
     def duplicate_elimination(self) -> DuplicateElimination:
         pass
 
-    def algorithm_arguments(self):
+    def algorithm_arguments(
+            self,
+            first_generation = None
+    ):
         def get_kwargs(**kwargs):
             return kwargs
+        if first_generation is None:
+            first_generation = self.sampling
         return get_kwargs(
-            sampling=self.sampling,
+            sampling=first_generation,
             crossover=self.crossover,
             mutation=self.mutation,
             eliminate_duplicates=self.duplicate_elimination
