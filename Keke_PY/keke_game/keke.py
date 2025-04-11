@@ -5,7 +5,7 @@
 import copy
 import uuid
 from dataclasses import dataclass
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Tuple
 from enum import Enum
 import pygame
 
@@ -252,6 +252,8 @@ class GameState:
             for j in range(-1, len(self.object_map[0]))
         ])
 
+    def get_map_sizes(self) -> Tuple[int, int]:
+        return len(self.object_map[0]), len(self.object_map)
 
 
 

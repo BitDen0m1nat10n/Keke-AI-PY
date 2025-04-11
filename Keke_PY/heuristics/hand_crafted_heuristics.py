@@ -369,7 +369,8 @@ def number_of_stopped_objects(state: GameState, _ctx: dict) -> float:
  * @param {number} weight The weight of this heuristic being multiplied.
  * @return {number} The weight multiplied with the average distance to killing objects.
  */"""
-def player_killer_distance(state: GameState, _ctx: dict, default_value: float) -> float:
+def player_killer_distance(state: GameState, _ctx: dict) -> float:
+    default_value: float = sum(state.get_map_sizes())
     avg = average_distance(state.players, state.killers)
     if avg is None:
         return default_value
@@ -378,7 +379,7 @@ def player_killer_distance(state: GameState, _ctx: dict, default_value: float) -
 
 
 # distanceHeuristics:
-def distance_to_winnable_objects(state: GameState, _ctx: dict, default_value: float) -> float:
+def distance_to_winnable_objects(state: GameState, _ctx: dict) -> float:
     """
     The average distance between players and objects that are winnable positions.
     If there are no players or winnable positions, the given default value is returned.
@@ -387,11 +388,12 @@ def distance_to_winnable_objects(state: GameState, _ctx: dict, default_value: fl
     @param default_value is the value returned, if there are no distances
     @return average distance between players and winnable objects or default_value
     """
+    default_value: float = sum(state.get_map_sizes())
     avg = average_distance(state.players, state.winnables)
     if avg is None:
         return default_value
     return avg
-def distance_to_words(state: GameState, _ctx: dict, default_value: float) -> float:
+def distance_to_words(state: GameState, _ctx: dict) -> float:
     """
     The average distance between players and words.
     If there are no players or words, the given default value is returned.
@@ -400,11 +402,12 @@ def distance_to_words(state: GameState, _ctx: dict, default_value: float) -> flo
     @param default_value is the value returned, if there are no distances
     @return average distance between players and words or default_value
     """
+    default_value: float = sum(state.get_map_sizes())
     avg = average_distance(state.players, state.words)
     if avg is None:
         return default_value
     return avg
-def distance_to_pushable_objects(state: GameState, _ctx: dict, default_value: float) -> float:
+def distance_to_pushable_objects(state: GameState, _ctx: dict) -> float:
     """
     The average distance between players and pushable objects.
     If there are no players or pushable objects, the given default value is returned.
@@ -413,6 +416,7 @@ def distance_to_pushable_objects(state: GameState, _ctx: dict, default_value: fl
     @param default_value is the value returned, if there are no distances
     @return average distance between players and pushable objects or default_value
     """
+    default_value: float = sum(state.get_map_sizes())
     avg = average_distance(state.players, state.pushables)
     if avg is None:
         return default_value
