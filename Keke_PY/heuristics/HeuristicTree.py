@@ -38,7 +38,7 @@ class GenericHeuristicTreeNode(Heuristic, Generic[OpRepr, Child]):
         return self.combinator.run(
             state, ctx,
             *self.parameters,
-            *[child.run(state, ctx) for child in self.children]
+            *(child.run(state, ctx) for child in self.children)
         )
 
 

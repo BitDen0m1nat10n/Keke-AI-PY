@@ -598,13 +598,13 @@ raw_heuristics: List[Callable] = [
 
     number_of_goal_objects,
     number_of_player_objects,
-    connectivity,
+    #connectivity,
     number_of_auto_movers,
 
-    number_of_stuck_is_words,
-    number_of_stuck_prefixes,
-    number_of_stuck_suffixes,
-    number_of_stuck_important_suffixes,
+    #number_of_stuck_is_words,
+    #number_of_stuck_prefixes,
+    #number_of_stuck_suffixes,
+    #number_of_stuck_important_suffixes,
 
     number_of_killer_objects,
     number_of_pushable_objects,
@@ -618,7 +618,7 @@ raw_heuristics: List[Callable] = [
 
     number_of_newly_created_rules,
 
-    goal_reachability
+    #goal_reachability
 
 ]
 
