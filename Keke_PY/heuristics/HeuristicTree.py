@@ -1,7 +1,8 @@
 import random
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import List, TypeVar, Generic, Union, Iterator, Tuple
+from math import floor
+from typing import List, TypeVar, Generic, Union, Iterator, Tuple, Dict
 
 from numpy.random import randn
 from pygame.math import clamp
@@ -10,7 +11,7 @@ from Keke_PY.keke_game.keke import GameState
 from Keke_PY.heuristics.HeuristicCombinator import HeuristicCombinator, default_combinators, \
     HeuristicCombinatorFromPureCombinator
 from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
-from Keke_PY.heuristics.hand_crafted_heuristics import heuristics
+from Keke_PY.heuristics.hand_crafted_heuristics import named_heuristics
 
 
 
@@ -58,16 +59,21 @@ class GenericHeuristicTreeNode(Heuristic, Generic[OpRepr, Child]):
 
 
 
-_raw_default_comb_ops: [HeuristicCombinator] = default_combinators
-_raw_default_leaf_ops: [HeuristicCombinator] = (
-    HeuristicCombinatorFromPureCombinator(lambda x: x, 1, 1), # constant
-    *map(HeuristicCombinator.from_parametrised_heuristic, heuristics), # handcrafted heuristics
+_raw_default_comb_ops: [Tuple[str, HeuristicCombinator]] = default_combinators
+_raw_default_leaf_ops: [Tuple[str, HeuristicCombinator]] = (
+    ("const", HeuristicCombinatorFromPureCombinator(lambda x: x, 1, 1)), # constant
+    *((name, HeuristicCombinator.from_parametrised_heuristic(h)) for name, h in named_heuristics), # handcrafted named_heuristics
 )
 
-_raw_default_operations: [HeuristicCombinator] = (
+_raw_default_operations: [Tuple[str, HeuristicCombinator]] = (
     *_raw_default_comb_ops,
     *_raw_default_leaf_ops
 )
+_default_operation_index_from_name: Dict[str, int] = dict(
+    (name, index) for index, (name, _op) in enumerate(_raw_default_operations)
+)
+assert all(not name.isdigit() for name in _default_operation_index_from_name.keys()),\
+    "the name of a heuristic can't be a number to prevent confusion with indices"
 
 @dataclass
 class DefaultOpRepr(HeuristicCombinator):
@@ -76,7 +82,7 @@ class DefaultOpRepr(HeuristicCombinator):
 
     @property
     def op(self) -> HeuristicCombinator:
-        return _raw_default_operations[self.op_index]
+        return _raw_default_operations[self.op_index][1]
 
     @property
     def nr_of_parameters(self) -> int:
@@ -88,6 +94,18 @@ class DefaultOpRepr(HeuristicCombinator):
 
     def run(self, state: GameState, ctx: dict, *args: float) -> float:
         return self.op.run(state, ctx, *args)
+
+    @property
+    def name(self) -> str:
+        return _raw_default_operations[self.op_index][0]
+
+    @staticmethod
+    def from_data(data: Union[int, float, str]) -> "DefaultOpRepr":
+        if data.__class__ == str and data in _default_operation_index_from_name.keys():
+            return DefaultOpRepr(_default_operation_index_from_name[data])
+        elif data.__class__ == float:
+            assert data == floor(data)
+        return DefaultOpRepr(int(data))
 
 
 default_comb_operations: [DefaultOpRepr] = tuple(DefaultOpRepr(i) for i, op in enumerate(_raw_default_operations) if op in _raw_default_comb_ops)
@@ -112,8 +130,8 @@ class HeuristicTree(GenericHeuristicTreeNode[DefaultOpRepr, 'HeuristicTree']):
         else:
             self.depth = 0
 
-    def to_data(self) -> Iterator[Union[int, float]]:
-        yield self.combinator.op_index
+    def to_data(self) -> Iterator[Union[str, float]]:
+        yield self.combinator.name
         for param in self.parameters:
             yield param
         for child in self.children:
@@ -123,7 +141,7 @@ class HeuristicTree(GenericHeuristicTreeNode[DefaultOpRepr, 'HeuristicTree']):
 
     @classmethod
     def from_data(cls, data: Iterator[Union[int, float, str]]) -> 'HeuristicTree':
-        operator: DefaultOpRepr = DefaultOpRepr(int(next(data)))
+        operator: DefaultOpRepr = DefaultOpRepr.from_data(next(data))
         parameters: List[float] = [
             float(next(data))
             for _ in range(operator.nr_of_static_parameters)

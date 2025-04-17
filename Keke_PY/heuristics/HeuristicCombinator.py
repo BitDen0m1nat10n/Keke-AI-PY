@@ -2,7 +2,7 @@ import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from inspect import signature
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 from Keke_PY.keke_game.keke import GameState
 from Keke_PY.heuristics.ParametrisedHeuristic import ParametrisedHeuristic, ParametrisedHeuristicFromCallable
@@ -90,12 +90,12 @@ class HeuristicCombinatorFromPureCombinator(HeuristicCombinator):
 
 
 
-default_combinators: List[HeuristicCombinator] = [
-    HeuristicCombinator.from_pure_combinator(float.__add__),
-    HeuristicCombinator.from_pure_combinator(float.__mul__),
-    HeuristicCombinator.from_pure_combinator(float.__sub__),
-    HeuristicCombinator.from_pure_combinator(math.sin),
-    HeuristicCombinator.from_pure_combinator(lambda x: max(x, 0)),
-    HeuristicCombinator.from_pure_combinator(math.tanh),
-    HeuristicCombinator.from_pure_combinator(lambda x: -x)
+default_combinators: List[Tuple[str, HeuristicCombinator]] = [
+    ("+", HeuristicCombinator.from_pure_combinator(float.__add__)),
+    ("*", HeuristicCombinator.from_pure_combinator(float.__mul__)),
+    ("-", HeuristicCombinator.from_pure_combinator(float.__sub__)),
+    ("sin", HeuristicCombinator.from_pure_combinator(math.sin)),
+    ("ReLU", HeuristicCombinator.from_pure_combinator(lambda x: max(x, 0))),
+    ("tanh", HeuristicCombinator.from_pure_combinator(math.tanh)),
+    ("-1*", HeuristicCombinator.from_pure_combinator(lambda x: -x))
 ]

@@ -3,7 +3,7 @@ from typing import List
 
 from Keke_PY.keke_game.keke import GameState
 from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
-from Keke_PY.heuristics.hand_crafted_heuristics import heuristics, heuristics_feature_vector_length
+from Keke_PY.heuristics.hand_crafted_heuristics import named_heuristics, heuristics_feature_vector_length
 
 
 class WeightedHeuristicSum(Heuristic):
@@ -20,7 +20,7 @@ class WeightedHeuristicSum(Heuristic):
     def run(self, state: GameState, ctx: dict, *args: float) -> float:
         feature_sum: float = 0.0
         weights_read_index: int = 0
-        for heuristic in heuristics:
+        for _name, heuristic in named_heuristics:
             weight: float = self.weights[weights_read_index]
             weights_read_index += 1
             if abs(weight) <= self.do_nothing_threshold:
