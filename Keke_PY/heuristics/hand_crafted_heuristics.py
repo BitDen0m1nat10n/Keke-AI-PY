@@ -371,7 +371,7 @@ def number_of_stopped_objects(state: GameState, _ctx: dict) -> float:
  */"""
 def player_killer_distance(state: GameState, _ctx: dict) -> float:
     default_value: float = 10.0 * sum(state.get_map_sizes())
-    avg = average_distance(state.players, state.killers)
+    avg = minimal_distance(state.players, state.killers)
     if avg is None:
         return default_value
     return avg
@@ -389,7 +389,7 @@ def distance_to_winnable_objects(state: GameState, _ctx: dict) -> float:
     @return average distance between players and winnable objects or default_value
     """
     default_value: float = 10.0 * sum(state.get_map_sizes())
-    avg = average_distance(state.players, state.winnables)
+    avg = minimal_distance(state.players, state.winnables)
     if avg is None:
         return default_value
     return avg
@@ -403,7 +403,7 @@ def distance_to_words(state: GameState, _ctx: dict) -> float:
     @return average distance between players and words or default_value
     """
     default_value: float = 10.0 * sum(state.get_map_sizes())
-    avg = average_distance(state.players, state.words)
+    avg = minimal_distance(state.players, state.words)
     if avg is None:
         return default_value
     return avg
@@ -417,7 +417,7 @@ def distance_to_pushable_objects(state: GameState, _ctx: dict) -> float:
     @return average distance between players and pushable objects or default_value
     """
     default_value: float = 10.0 * sum(state.get_map_sizes())
-    avg = average_distance(state.players, state.pushables)
+    avg = minimal_distance(state.players, state.pushables)
     if avg is None:
         return default_value
     return avg
@@ -483,6 +483,21 @@ def average_distance(group1: List[GameObj], group2: List[GameObj]) -> Union[floa
     return distance_sum / distances_count
 
 
+"""/**
+ * Calculates the minimal Distance between two groups of objects.
+ *
+ * @param {object[]} g1 First group of objects.
+ * @param {object[]} g2 Second group of objects.
+ * @return {number} Minimal distance between the given groups of objects.
+ */"""
+def minimal_distance(group1: List[GameObj], group2: List[GameObj]) -> Union[float, None]:
+    min_distance: Optional[float] = None
+    for obj1 in group1:
+        for obj2 in group2:
+            dist: float = distance(obj1, obj2)
+            if min_distance is None or dist < min_distance:
+                min_distance = dist
+    return min_distance
 
 
 
