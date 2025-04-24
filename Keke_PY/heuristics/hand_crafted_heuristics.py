@@ -1,4 +1,4 @@
-from typing import List, Callable, Union, Optional
+from typing import List, Callable, Union, Optional, Tuple
 
 from Keke_PY.keke_game.keke import GameState, parse_map, only_top_objects_string, GameObj, Direction, GameObjectType
 from Keke_PY.heuristics.ParametrisedHeuristic import ParametrisedHeuristic
@@ -60,7 +60,7 @@ def number_of_stuck_is_words(state: GameState, _ctx: dict) -> float:
     Number of stuck 'IS'-words.
     (For a clarification of what 'stuck' means, see 'isIsStuck()')
     @param state is the current game-state
-    @param _ctx is the (unused) context given to the heuristics
+    @param _ctx is the (unused) context given to the named_heuristics
     @return number of stuck 'IS'-words
     """
     counter: int = 0
@@ -74,7 +74,7 @@ def number_of_stuck_prefixes(state: GameState, _ctx: dict) -> float:
     Number of stuck prefixes.
     (For a clarification of what 'stuck' means, see 'prefixIsStuck()')
     @param state is the current game-state
-    @param _ctx is the (unused) context given to the heuristics
+    @param _ctx is the (unused) context given to the named_heuristics
     @return number of stuck prefixes
     """
     counter: int = 0
@@ -88,7 +88,7 @@ def number_of_stuck_suffixes(state: GameState, _ctx: dict) -> float:
     Number of stuck suffixes.
     (For a clarification of what 'stuck' means, see 'suffixIsStuck()')
     @param state is the current game-state
-    @param _ctx is the (unused) context given to the heuristics
+    @param _ctx is the (unused) context given to the named_heuristics
     @return number of stuck suffixes
     """
     counter: int = 0
@@ -102,7 +102,7 @@ def number_of_stuck_important_suffixes(state: GameState, _ctx: dict) -> float:
     Number of stuck important suffixes. (As defined above by 'important_SuffixWords')
     (For a clarification of what 'stuck' means, see 'suffixIsStuck()')
     @param state is the current game-state
-    @param _ctx is the (unused) context given to the heuristics
+    @param _ctx is the (unused) context given to the named_heuristics
     @return number of stuck important suffixes
     """
     counter: int = 0
@@ -405,7 +405,7 @@ def distance_to_winnable_objects(state: GameState, _ctx: dict) -> float:
     The average distance between players and objects that are winnable positions.
     If there are no players or winnable positions, the given default value is returned.
     @param state is the current game-state
-    @param _ctx is the (unused) context given to the heuristics
+    @param _ctx is the (unused) context given to the named_heuristics
     @param default_value is the value returned, if there are no distances
     @return average distance between players and winnable objects or default_value
     """
@@ -419,7 +419,7 @@ def distance_to_words(state: GameState, _ctx: dict) -> float:
     The average distance between players and words.
     If there are no players or words, the given default value is returned.
     @param state is the current game-state
-    @param _ctx is the (unused) context given to the heuristics
+    @param _ctx is the (unused) context given to the named_heuristics
     @param default_value is the value returned, if there are no distances
     @return average distance between players and words or default_value
     """
@@ -433,7 +433,7 @@ def distance_to_pushable_objects(state: GameState, _ctx: dict) -> float:
     The average distance between players and pushable objects.
     If there are no players or pushable objects, the given default value is returned.
     @param state is the current game-state
-    @param _ctx is the (unused) context given to the heuristics
+    @param _ctx is the (unused) context given to the named_heuristics
     @param default_value is the value returned, if there are no distances
     @return average distance between players and pushable objects or default_value
     """
@@ -629,47 +629,49 @@ def mark_all_connected(blocked_fields_map: List[List[str]], x: int, y: int, size
     mark_all_connected(blocked_fields_map, x, y + 1, size_x, size_y)
 
 
+def with_name(function: Callable) -> Tuple[str, Callable]:
+    return function.__name__, function
 
-raw_heuristics: List[Callable] = [
+raw_heuristics: List[Tuple[str, Callable]] = [
 
-    number_of_goal_objects,
-    no_goal_objects,
-    number_of_player_objects,
-    no_player_objects,
-    connectivity,
-    number_of_auto_movers,
-    no_auto_movers,
+    with_name(number_of_goal_objects),
+    with_name(number_of_player_objects),
+    with_name(connectivity),
+    with_name(number_of_auto_movers),
+    with_name(no_goal_objects),
+    with_name(no_player_objects),
+    with_name(no_auto_movers),
 
-    number_of_stuck_is_words,
-    number_of_stuck_prefixes,
-    number_of_stuck_suffixes,
-    number_of_stuck_important_suffixes,
+    with_name(number_of_stuck_is_words),
+    with_name(number_of_stuck_prefixes),
+    with_name(number_of_stuck_suffixes),
+    with_name(number_of_stuck_important_suffixes),
 
-    number_of_killer_objects,
-    no_killer_objects,
-    number_of_pushable_objects,
-    no_pushable_objects,
-    number_of_sinkable_objects,
-    no_sinkable_objects,
-    number_of_stopped_objects,
-    no_stoped_objects,
-    player_killer_distance,
+    with_name(number_of_killer_objects),
+    with_name(number_of_pushable_objects),
+    with_name(number_of_sinkable_objects),
+    with_name(number_of_stopped_objects),
+    with_name(player_killer_distance),
+    with_name(no_killer_objects),
+    with_name(no_pushable_objects),
+    with_name(no_sinkable_objects),
+    with_name(no_stoped_objects),
 
-    distance_to_winnable_objects,
-    distance_to_words,
-    distance_to_pushable_objects,
+    with_name(distance_to_winnable_objects),
+    with_name(distance_to_words),
+    with_name(distance_to_pushable_objects),
 
-    number_of_newly_created_rules,
+    with_name(number_of_newly_created_rules),
 
-    goal_reachability
+    with_name(goal_reachability)
 
 ]
 
-heuristics: List[ParametrisedHeuristic] = [
-    ParametrisedHeuristic.from_func(h) for h in raw_heuristics
+named_heuristics: List[Tuple[str, ParametrisedHeuristic]] = [
+    (name, ParametrisedHeuristic.from_func(h)) for name, h in raw_heuristics
 ]
 
 heuristics_feature_vector_length: int = sum(map(
-    lambda heuristic: 1 + heuristic.nr_of_parameters,
-    heuristics
+    lambda named_heuristic: 1 + named_heuristic[1].nr_of_parameters,
+    named_heuristics
 ))

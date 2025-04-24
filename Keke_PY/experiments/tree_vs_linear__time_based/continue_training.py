@@ -44,7 +44,7 @@ agent_factory = HeuristicGuidedSearch.GuidedSearchFactory()
 
 with open(file_name) as file:
     log_lines: List[str] = file.readlines()
-representation.load_from_lines(log_lines)
+representation.load_from_lines(log_lines, "")
 test_problem = KekeProblem.from_log_lines(
     representation,
     log_lines,
