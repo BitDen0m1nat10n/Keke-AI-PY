@@ -20,6 +20,9 @@ allSuffixes = ["stop", "sink", "push", "you", "kill", "hot", "move", "melt", "yo
 def number_of_goal_objects(state: GameState, _ctx: dict) -> float:
     return len(state.winnables)
 
+def no_goal_objects(state: GameState, _ctx: dict) -> float:
+    return 1.0 if len(state.winnables) == 0 else 0.0
+
 """/**
  * Returns negative number of players on current blocked_fields_map multiplied by a weight.
  *
@@ -28,7 +31,10 @@ def number_of_goal_objects(state: GameState, _ctx: dict) -> float:
  * @return {number} The weight multiplied with the negative number of players.
  */"""
 def number_of_player_objects(state: GameState, _ctx: dict) -> float:
-    return -len(state.players)
+    return len(state.players)
+
+def no_player_objects(state: GameState, _ctx: dict) -> float:
+    return 1.0 if len(state.players) == 0 else 0.0
 
 """/**
  * Returns the amount of closed rooms multiplied by a weight.
@@ -314,6 +320,9 @@ def is_direction_blocked(state: GameState, x: int, y: int, direction: Direction)
 def number_of_auto_movers(state: GameState, _ctx: dict) -> float:
     return len(state.auto_movers)
 
+def no_auto_movers(state: GameState, _ctx: dict) -> float:
+    return 1.0 if len(state.auto_movers) == 0 else 0.0
+
 """/**
  * Returns number of killer objects on current blocked_fields_map multiplied by a weight.
  *
@@ -323,6 +332,9 @@ def number_of_auto_movers(state: GameState, _ctx: dict) -> float:
  */"""
 def number_of_killer_objects(state: GameState, _ctx: dict) -> float:
     return len(state.killers)
+
+def no_killer_objects(state: GameState, _ctx: dict) -> float:
+    return 1.0 if len(state.killers) == 0 else 0.0
 
 """/**
  * Returns negative number of pushable objects on current blocked_fields_map multiplied by a weight.
@@ -334,6 +346,9 @@ def number_of_killer_objects(state: GameState, _ctx: dict) -> float:
 def number_of_pushable_objects(state: GameState, _ctx: dict) -> float:
     return len(state.pushables)
 
+def no_pushable_objects(state: GameState, _ctx: dict) -> float:
+    return 1.0 if len(state.pushables) == 0 else 0.0
+
 
 """/**
  * Returns number of sinkers on current blocked_fields_map multiplied by a weight.
@@ -344,6 +359,9 @@ def number_of_pushable_objects(state: GameState, _ctx: dict) -> float:
  */"""
 def number_of_sinkable_objects(state: GameState, _ctx: dict) -> float:
     return len(state.sinkers)
+
+def no_sinkable_objects(state: GameState, _ctx: dict) -> float:
+    return 1.0 if len(state.sinkers) == 0 else 0.0
 
 
 """/**
@@ -359,6 +377,9 @@ def number_of_stopped_objects(state: GameState, _ctx: dict) -> float:
         if obj.is_stopped:
             count += 1
     return count
+
+def no_stoped_objects(state: GameState, _ctx: dict) -> float:
+    return 0.0 if any(obj.is_stopped for obj in state.phys) else 1.0
 
 
 
@@ -612,19 +633,26 @@ def mark_all_connected(blocked_fields_map: List[List[str]], x: int, y: int, size
 raw_heuristics: List[Callable] = [
 
     number_of_goal_objects,
+    no_goal_objects,
     number_of_player_objects,
-    #connectivity,
+    no_player_objects,
+    connectivity,
     number_of_auto_movers,
+    no_auto_movers,
 
-    #number_of_stuck_is_words,
-    #number_of_stuck_prefixes,
-    #number_of_stuck_suffixes,
-    #number_of_stuck_important_suffixes,
+    number_of_stuck_is_words,
+    number_of_stuck_prefixes,
+    number_of_stuck_suffixes,
+    number_of_stuck_important_suffixes,
 
     number_of_killer_objects,
+    no_killer_objects,
     number_of_pushable_objects,
+    no_pushable_objects,
     number_of_sinkable_objects,
+    no_sinkable_objects,
     number_of_stopped_objects,
+    no_stoped_objects,
     player_killer_distance,
 
     distance_to_winnable_objects,
@@ -633,7 +661,7 @@ raw_heuristics: List[Callable] = [
 
     number_of_newly_created_rules,
 
-    #goal_reachability
+    goal_reachability
 
 ]
 
