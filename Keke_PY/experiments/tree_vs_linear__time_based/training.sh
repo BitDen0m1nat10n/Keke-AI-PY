@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=20
 #SBATCH --mem-per-cpu=4G
 #SBATCH --time=5-0 # Days_hours
-#SBATCH --output=TreeVsLinear_TimeBased_50Gens_60sec_experimental_only_simple_heuristics_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
+#SBATCH --output=TreeVsLinear_TimeBased_50Gens_60sec_experimental_more_binary_heuristics_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
 
 
 # setup conda, and a conda-environment like environment.txt :
