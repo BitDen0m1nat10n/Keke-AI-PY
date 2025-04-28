@@ -33,7 +33,7 @@ n_evals: int = pop_size * n_generations
 
 
 representation = TrackedRepresentation(
-    HeuristicTreeRepresentation(10) if int_arguments[0] == 1 else WeightedHeuristicSumRepresentation(0.5)
+    HeuristicTreeRepresentation(5) if int_arguments[0] == 1 else WeightedHeuristicSumRepresentation(0.5)
 )
 
 agent_factory = HeuristicGuidedSearch.GuidedSearchFactory()
