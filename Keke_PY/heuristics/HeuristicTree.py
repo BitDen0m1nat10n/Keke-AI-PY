@@ -101,6 +101,7 @@ class DefaultOpRepr(HeuristicCombinator):
 
     @staticmethod
     def from_data(data: Union[int, float, str]) -> "DefaultOpRepr":
+        data = data.strip()
         if data.__class__ == str and data in _default_operation_index_from_name.keys():
             return DefaultOpRepr(_default_operation_index_from_name[data])
         elif data.__class__ == float:
