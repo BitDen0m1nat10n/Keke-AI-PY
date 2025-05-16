@@ -62,8 +62,8 @@ def measure_time() -> Iterable[None]:
 
 if __name__ == '__main__':
 
-    eval_single_heuristic(SimpleHeuristic(), test_level_src="./json_levels/test_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TEST_SET__")
-    eval_single_heuristic(SimpleHeuristic(), test_level_src="./json_levels/train_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TRAIN_SET__")
+    eval_single_heuristic(SimpleHeuristic(), test_levels_or_src="./json_levels/test_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TEST_SET__")
+    eval_single_heuristic(SimpleHeuristic(), test_levels_or_src="./json_levels/train_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TRAIN_SET__")
 
     for _ in measure_time():
         info: List = [optimization_algorithm, representation, agent_factory]

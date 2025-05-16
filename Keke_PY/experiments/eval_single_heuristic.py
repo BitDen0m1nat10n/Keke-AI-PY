@@ -19,7 +19,7 @@ from Keke_PY.search_agents.ai_interface import AgentFromPolicy
 
 def eval_single_heuristic(
         heur: Heuristic,
-        test_level_src: str = "./json_levels/full_biy_LEVELS.json",
+        test_levels_or_src: Union[List[str], str] = "./json_levels/full_biy_LEVELS.json",
         agent_factory: AgentFromPolicy = HeuristicGuidedSearch.GuidedSearchFactory(),
         logging_prefix: Optional[str] = "",
 ) -> Dict[int, float]:
@@ -31,7 +31,7 @@ def eval_single_heuristic(
         max_calculation_time=60.0,
         time_dependent_performance_function=True,
         agent_factory=agent_factory,
-        test_levels_or_src=test_level_src,
+        test_levels_or_src=test_levels_or_src,
         training_levels_or_src=[],
         logging_prefix=logging_prefix,
     )
