@@ -13,12 +13,13 @@ from Keke_PY.heuristic_pymoo_representations.WeightedHeuristicSumRepresentation 
 
 
 file_name_template: str = "/".join([
-    "Keke_PY", "experiment_logs", "small_time_dependent_test_50gens_2sec",
-    "TreeVsLinear_TimeBased_50Gens_2sec_JOB_TREES-out.txt"
+    "TreeVsLinear_TimeBased_50Gens_60sec_experimental_more_binary_heuristics_640441_1-out.txt"
+    #"Keke_PY", "experiment_logs", "small_time_dependent_test_50gens_2sec",
+    #"TreeVsLinear_TimeBased_50Gens_2sec_JOB_TREES-out.txt"
 ])
 
 linear_setups: List[Tuple[bool, bool, int]] = [
-    (False, True, 585903),
+    #(False, True, 585903),
 ]
 tree_setups: List[Tuple[bool, bool, int]] = [
     (True, True, 585903),
@@ -98,7 +99,7 @@ if __name__ == "__main__":
         xlim=(0, 50),
         ylim=(0, 4.0),
     )
-    plot_distr(ax, linear_runs, -1, "blue")
+    #plot_distr(ax, linear_runs, -1, "blue")
     plot_distr(ax, tree_runs, -1, "green")
     plt.show()
 
@@ -109,6 +110,6 @@ if __name__ == "__main__":
         xlim=(0, 50),
         ylim=(0, 4.0),
     )
-    plot_distr(ax, linear_runs, 0, "blue")
+    #plot_distr(ax, linear_runs, 0, "blue")
     plot_distr(ax, tree_runs, 0, "green")
     plt.show()
