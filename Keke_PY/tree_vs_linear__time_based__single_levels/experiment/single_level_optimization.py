@@ -41,7 +41,7 @@ level: str = all_levels[level_nr]
 use_trees: bool = (int_arguments[0] % 2) == 1
 
 pop_size: int = 10
-n_generations: int = 50
+n_generations: int = 2#50
 
 
 n_evals: int = pop_size * n_generations

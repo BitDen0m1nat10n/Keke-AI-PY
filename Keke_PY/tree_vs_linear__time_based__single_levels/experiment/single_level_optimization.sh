@@ -8,7 +8,7 @@
 #SBATCH --array=0-4 # 184lvl * (linear + trees) = 0-367
 #SBATCH --cpus-per-task=10
 #SBATCH --mem-per-cpu=4G
-#SBATCH --time=2:00:00 # expected max time: (baseline 184min + train 500min + eval 184min = 868min) / 10cpus = 90min
+#SBATCH --time=00:20:00 # expected max time: (baseline 184min + train 500min + eval 184min = 868min) / 10cpus = 90min
 #SBATCH --output=KekeTimeBasedSingleLevelOptimization50Gens_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
 
 
