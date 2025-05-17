@@ -7,7 +7,7 @@ if True:
 import multiprocessing
 import time
 import numpy as np
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Dict
 
 from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.core.algorithm import Algorithm
@@ -36,7 +36,7 @@ levels: List[str] = [
       load_level_set("./json_levels/test_LEVELS.json")["levels"]],
 ]
 
-level_nr: int = int_arguments[0] // 2
+level_nr: int = (int_arguments[0] // 2)
 level: str = levels[level_nr]
 use_trees: bool = (int_arguments[0] % 2) == 1
 
@@ -55,36 +55,50 @@ executor=multiprocessing.Pool(10)
 
 optimization_algorithm: Algorithm = GA(pop_size=pop_size, **representation.algorithm_arguments())
 
-training_problem: KekeProblem = KekeProblem(
-    training_batches=[[level]],
-    representation=representation,
-    max_node_expansions=None,
-    max_calculation_time=60.0,
-    time_dependent_performance_function=True,
-    executor=executor,
-    test_batch=[],
-    logging_prefix="TRAIN__"
-)
 
 
 def measure_time() -> Iterable[None]:
     start = time.time()
+    print("Start measuring time.")
     yield None
     end = time.time()
     print("The time of execution is:", (end - start), "s")
 
+
+run_info: Dict[str, object] = {
+    "script": __file__,
+    "algorithm": optimization_algorithm,
+    "use_trees": use_trees,
+    "representation": representation,
+    "level_nr": (int_arguments[0] // 2),
+    "level": level,
+    "pop_size": pop_size,
+    "n_gen": n_generations
+}
+info: str = ",\n".join(f"{name}: {obj}" for name, obj in run_info.items())
+
 if __name__ == '__main__':
 
-    #eval_single_heuristic(SimpleHeuristic(), test_levels_or_src=[level], logging_prefix="SIMPLE_HEURISTIC_ON_TRAINING_LEVEL__")
+    print(info)
+
+    eval_single_heuristic(SimpleHeuristic(), test_levels_or_src=[level], logging_prefix="BASELINE_ON_TRAINING_LEVEL__")
 
     for _ in measure_time():
-        info: List = [optimization_algorithm, representation]
 
         print(f"TRAINING ON LEVEL:{level_nr}")
         print(f"of {len(levels)} levels")
         print(f"---LEVEL STRING---\n{level}\n---LEVEL STRING---")
 
-
+        training_problem: KekeProblem = KekeProblem(
+            training_batches=[[level]],
+            representation=representation,
+            max_node_expansions=None,
+            max_calculation_time=60.0,
+            time_dependent_performance_function=True,
+            executor=executor,
+            test_batch=[],
+            logging_prefix="TRAIN__"
+        )
 
         res = minimize(
             training_problem,
@@ -109,3 +123,5 @@ if __name__ == '__main__':
 
     eval_single_heuristic(best_individual, test_levels_or_src="./json_levels/test_LEVELS.json", logging_prefix="BEST_ON_TEST_SET__")
     eval_single_heuristic(best_individual, test_levels_or_src="./json_levels/train_LEVELS.json", logging_prefix="BEST_ON_TRAIN_SET__")
+
+    print(info)

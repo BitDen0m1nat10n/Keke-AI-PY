@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=KekeTimeBasedSingleLevelOptimization
+#SBATCH --job-name=KekeTimeBasedSingleLevelOptimization50Gens
 #SBATCH --mail-user=rongero@tnt.uni-hannover.de
 #SBATCH --mail-type=ALL
 #SBATCH --partition=cpu_short_stud
@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem-per-cpu=4G
 #SBATCH --time=2:00:00 # expected time: 1h 10min
-#SBATCH --output=KekeTimeBasedSingleLevelOptimization_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
+#SBATCH --output=KekeTimeBasedSingleLevelOptimization50Gens_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
 
 
 # setup conda, and a conda-environment like environment.txt :
