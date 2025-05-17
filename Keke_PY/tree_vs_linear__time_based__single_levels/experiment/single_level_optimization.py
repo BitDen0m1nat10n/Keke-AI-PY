@@ -77,11 +77,18 @@ run_info: Dict[str, object] = {
 }
 info: str = ",\n".join(f"{name}: {obj}" for name, obj in run_info.items())
 
+all_levels: List[str] = [
+    *[level["ascii"] for level in
+      load_level_set("./json_levels/train_LEVELS.json")["levels"]],
+    *[level["ascii"] for level in
+      load_level_set("./json_levels/test_LEVELS.json")["levels"]],
+]
+
 if __name__ == '__main__':
 
     print(info)
 
-    eval_single_heuristic(SimpleHeuristic(), test_levels_or_src=[level], logging_prefix="BASELINE_ON_TRAINING_LEVEL__")
+    eval_single_heuristic(SimpleHeuristic(), test_levels_or_src=all_levels, logging_prefix="BASELINE__")
 
     for _ in measure_time():
 
@@ -121,13 +128,7 @@ if __name__ == '__main__':
     best_individual_encoded: np.ndarray = training_problem.past_instances_by_gen_and_index[best_individual_index]
     best_individual: Heuristic = representation.into_heuristic(best_individual_encoded)
 
-    test_levels: List[str] = [
-        *[level["ascii"] for level in
-          load_level_set("./json_levels/train_LEVELS.json")["levels"]],
-        *[level["ascii"] for level in
-          load_level_set("./json_levels/test_LEVELS.json")["levels"]],
-    ]
 
-    eval_single_heuristic(best_individual, test_levels_or_src=test_levels, logging_prefix="RESULT_ON_ALL_LEVELS__")
+    eval_single_heuristic(best_individual, test_levels_or_src=all_levels, logging_prefix="RESULT_ON_ALL_LEVELS__")
 
     print(info)
