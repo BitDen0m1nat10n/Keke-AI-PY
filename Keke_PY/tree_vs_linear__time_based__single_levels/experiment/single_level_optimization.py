@@ -2,7 +2,7 @@ if True:
     """Include Project root as Environment paths:"""
     from os.path import dirname, abspath
     import sys
-    sys.path.append(dirname(dirname(dirname(abspath(__file__)))))
+    sys.path.append(dirname(dirname(dirname(dirname(abspath(__file__))))))
 
 import multiprocessing
 import time
@@ -70,7 +70,7 @@ run_info: Dict[str, object] = {
     "algorithm": optimization_algorithm,
     "use_trees": use_trees,
     "representation": representation,
-    "level_nr": (int_arguments[0] // 2),
+    "job_arr_index": (int_arguments[0] // 2),
     "level": level,
     "pop_size": pop_size,
     "n_gen": n_generations
@@ -121,7 +121,13 @@ if __name__ == '__main__':
     best_individual_encoded: np.ndarray = training_problem.past_instances_by_gen_and_index[best_individual_index]
     best_individual: Heuristic = representation.into_heuristic(best_individual_encoded)
 
-    eval_single_heuristic(best_individual, test_levels_or_src="./json_levels/test_LEVELS.json", logging_prefix="BEST_ON_TEST_SET__")
-    eval_single_heuristic(best_individual, test_levels_or_src="./json_levels/train_LEVELS.json", logging_prefix="BEST_ON_TRAIN_SET__")
+    test_levels: List[str] = [
+        *[level["ascii"] for level in
+          load_level_set("./json_levels/train_LEVELS.json")["levels"]],
+        *[level["ascii"] for level in
+          load_level_set("./json_levels/test_LEVELS.json")["levels"]],
+    ]
+
+    eval_single_heuristic(best_individual, test_levels_or_src=test_levels, logging_prefix="RESULT_ON_ALL_LEVELS__")
 
     print(info)
