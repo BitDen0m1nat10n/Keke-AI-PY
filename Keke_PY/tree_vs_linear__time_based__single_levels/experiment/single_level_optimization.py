@@ -29,7 +29,7 @@ for argument in sys.argv:
     if argument.isdigit():
         int_arguments.append(int(argument))
 
-levels: List[str] = [
+all_levels: List[str] = [
     *[level["ascii"] for level in
       load_level_set("./json_levels/train_LEVELS.json")["levels"]],
     *[level["ascii"] for level in
@@ -37,7 +37,7 @@ levels: List[str] = [
 ]
 
 level_nr: int = (int_arguments[0] // 2)
-level: str = levels[level_nr]
+level: str = all_levels[level_nr]
 use_trees: bool = (int_arguments[0] % 2) == 1
 
 pop_size: int = 10
@@ -77,13 +77,6 @@ run_info: Dict[str, object] = {
 }
 info: str = ",\n".join(f"{name}: {obj}" for name, obj in run_info.items())
 
-all_levels: List[str] = [
-    *[level["ascii"] for level in
-      load_level_set("./json_levels/train_LEVELS.json")["levels"]],
-    *[level["ascii"] for level in
-      load_level_set("./json_levels/test_LEVELS.json")["levels"]],
-]
-
 if __name__ == '__main__':
 
     print(info)
@@ -93,7 +86,7 @@ if __name__ == '__main__':
     for _ in measure_time():
 
         print(f"TRAINING ON LEVEL:{level_nr}")
-        print(f"of {len(levels)} levels")
+        print(f"of {len(all_levels)} levels")
         print(f"---LEVEL STRING---\n{level}\n---LEVEL STRING---")
 
         training_problem: KekeProblem = KekeProblem(
@@ -116,7 +109,7 @@ if __name__ == '__main__':
 
 
         print(f"TRAINING ON LEVEL:{level_nr}")
-        print(f"of {len(levels)} levels")
+        print(f"of {len(all_levels)} levels")
         print(f"---LEVEL STRING---\n{level}\n---LEVEL STRING---")
         print("training done.")
 
