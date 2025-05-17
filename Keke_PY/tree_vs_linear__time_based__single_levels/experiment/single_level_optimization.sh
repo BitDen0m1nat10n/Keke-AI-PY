@@ -5,10 +5,10 @@
 #SBATCH --mail-type=ALL
 #SBATCH --partition=cpu_short_stud
 
-#SBATCH --array=0-2 # 184lvl * (linear + trees) = 0-367
+#SBATCH --array=0-367 # 184lvl * (linear + trees) = 0-367
 #SBATCH --cpus-per-task=10
 #SBATCH --mem-per-cpu=4G
-#SBATCH --time=2:00:00 # expected time: 1h 10min
+#SBATCH --time=2:00:00 # expected max time: (baseline 184min + train 500min + eval 184min = 868min) / 10cpus = 90min
 #SBATCH --output=KekeTimeBasedSingleLevelOptimization50Gens_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
 
 
@@ -26,4 +26,4 @@ source setup_on_cluster.sh
 # submit your job from.
 cd $SLURM_SUBMIT_DIR
 
-python Keke_PY/experiments/single_level_optimization.py --argument $SLURM_ARRAY_TASK_ID
+python Keke_PY/tree_vs_linear__time_based__single_levels/experiment/single_level_optimization.py --argument $SLURM_ARRAY_TASK_ID
