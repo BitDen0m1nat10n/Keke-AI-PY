@@ -18,7 +18,7 @@ levels: List[str] = [
       load_level_set("./json_levels/train_LEVELS.json")["levels"]],
     *[level["ascii"] for level in
       load_level_set("./json_levels/test_LEVELS.json")["levels"]],
-]
+][0:2]
 
 slurm_job_id: int = 553991 # TODO: set to correct job_id
 

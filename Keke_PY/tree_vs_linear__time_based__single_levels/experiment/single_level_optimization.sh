@@ -5,7 +5,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --partition=cpu_short_stud
 
-#SBATCH --array=0-367 # 184lvl * (linear + trees) = 0-367
+#SBATCH --array=0-4 # 184lvl * (linear + trees) = 0-367
 #SBATCH --cpus-per-task=10
 #SBATCH --mem-per-cpu=4G
 #SBATCH --time=2:00:00 # expected max time: (baseline 184min + train 500min + eval 184min = 868min) / 10cpus = 90min
