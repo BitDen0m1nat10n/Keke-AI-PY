@@ -34,10 +34,15 @@ class TrackedRepresentation(HeuristicRepresentation):
             assert len(line.split('\n')) == 1
             print(logging_prefix + line)
 
-    def load_from_lines(self, lines: [str], logging_prefix: Optional[str] = None):
+    def load_from_lines(
+            self, lines: [str],
+            logging_prefix: Optional[str] = None,
+            accepting_prefixes: List[str] = ("",),
+    ):
         assert len(self._tracked_instances) == 0
+        track_prefixes: List[str] = list(f"{prefix}TRACK:" for prefix in accepting_prefixes)
         for line in lines:
-            if line.startswith("TRACK:"):
+            if any(line.startswith(track_prefix) for track_prefix in track_prefixes):
                 serialization: str = line.split("TRACK:")[1]
                 instance: np.ndarray = self.deserialize(serialization, False)
                 self.track_instance(instance, logging_prefix)
