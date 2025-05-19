@@ -1,0 +1,6 @@
+pygame 2.2.0 (SDL 2.30.7, Python 3.8.10)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Traceback (most recent call last):
+  File "Keke_PY/tree_vs_linear__time_based__single_levels/experiment/single_level_optimization.py", line 40, in <module>
+    level: str = all_levels[level_nr]
+IndexError: list index out of range
