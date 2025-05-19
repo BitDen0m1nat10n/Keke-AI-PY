@@ -1,6 +1,6 @@
 import multiprocessing
 import pathlib
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Union
 
 import numpy as np
 
@@ -44,7 +44,7 @@ def level_and_representation_from_job_arr_index(job_arr_index: int) -> (int, Heu
         )
     )
 
-def get_level_results(job_arr_index: int) -> KekeProblem:
+def get_level_results(job_arr_index: int) -> (KekeProblem, str):
     file_name: str = log_file_name.replace("%A", str(slurm_job_id(job_arr_index))).replace("%a", str(job_arr_index))
     level_nr, representation = level_and_representation_from_job_arr_index(job_arr_index)
     with open(pathlib.Path(log_location, file_name)) as file:
@@ -66,29 +66,30 @@ def get_level_results(job_arr_index: int) -> KekeProblem:
     # reading in testing data:
     testing_data: KekeProblem = KekeProblem.from_log_lines(test_best_individual_representation, testing_lines, logging_prefix="RESULT_ON_ALL_LEVELS__")
     print(f"reading in job_arr_index {job_arr_index + 1} of {2 * len(levels)} done.")
-    return testing_data
+    return testing_data, representation._inner_repr.serialize(best_individual_encoded[representation._offset:])
 
-def get_evaluation_str(job_arr_index: int) -> List[str]:
-    testing_data: KekeProblem = get_level_results(job_arr_index)
+def get_evaluation_str(job_arr_index: int) -> Tuple[List[str], str]:
+    testing_data, best_individual_str = get_level_results(job_arr_index)
     evaluations: List[str] = []
     for lvl in levels:
-        evaluation: Tuple[Optional[List[str]], int] = testing_data.past_evaluations_by_gen_index_and_level_id[
+        evaluation: Tuple[Union[List[str], None], int, float] = testing_data.past_evaluations_by_gen_index_and_level_id[
             (0, 0, testing_data.level_to_id_map[lvl])
         ]
         if evaluation[0] is None:
             evaluations.append("----")
         else:
-            evaluations.append(str(evaluation[1]))
-    return evaluations
+            evaluations.append(str(evaluation[2]))
+    return evaluations, best_individual_str
 
 if __name__ == '__main__':
 
     print("\n---READING IN DATA---\n")
 
-    evaluations_list: List[List[str]] = list(multiprocessing.Pool(6).map(
+    evaluations_list: List[Tuple[List[str], str]] = list(multiprocessing.Pool(6).map(
         get_evaluation_str, range(2 * len(levels))
     ))
 
     print("\n---EVALUATION---\n")
-    for evaluations in evaluations_list:
+    for evaluations, best_individual in evaluations_list:
         print("LEVEL AGENT EVALUATION:" + '\t:'.join(evaluations))
+        #print(best_individual)
