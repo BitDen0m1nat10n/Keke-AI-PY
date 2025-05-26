@@ -1,6 +1,13 @@
+if True:
+    """Include Project root as Environment paths:"""
+    from os.path import dirname, abspath
+    import sys
+    sys.path.append(dirname(dirname(dirname(dirname(abspath(__file__))))))
+
+
 import multiprocessing
 import pathlib
-from typing import List, Tuple, Optional, Dict, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 
@@ -90,6 +97,6 @@ if __name__ == '__main__':
     ))
 
     print("\n---EVALUATION---\n")
-    for evaluations, best_individual in evaluations_list:
-        print("LEVEL AGENT EVALUATION:" + '\t:'.join(evaluations))
-        #print(best_individual)
+    for i, (evaluations, best_individual) in enumerate(evaluations_list):
+        print(f"LEVEL AGENT GENOME{i} LEVEL{i // 2} TREES?-{i % 2}:{best_individual}")
+        print(f"LEVEL AGENT EVALUATION{i} LEVEL{i // 2} TREES?-{i % 2}:" + '\t:'.join(evaluations))

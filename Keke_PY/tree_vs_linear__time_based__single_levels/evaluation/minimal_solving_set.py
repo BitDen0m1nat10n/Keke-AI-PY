@@ -12,7 +12,7 @@ with open(file_name) as file:
 solving_matrix: List[List[bool]] = []
 
 for line in lines:
-    if line.startswith("LEVEL AGENT EVALUATION:"):
+    if line.startswith("LEVEL AGENT EVALUATION"):
         _, *results = line.split(':')
         solving_matrix.append([result.strip() != "----" for result in results])
 
