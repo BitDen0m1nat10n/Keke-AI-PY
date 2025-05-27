@@ -8,7 +8,10 @@ from pymoo.core.problem import Problem
 
 from Keke_PY.experiments.KekeProblem import KekeProblem
 from Keke_PY.heuristic_pymoo_representations.HeuristicRepresentation import HeuristicRepresentation
+from Keke_PY.heuristic_pymoo_representations.HeuristicTreeRepresentation import HeuristicTreeRepresentation
 from Keke_PY.heuristic_pymoo_representations.TupleRepresentation import TupleRepresentation
+from Keke_PY.heuristic_pymoo_representations.WeightedHeuristicSumRepresentation import \
+    WeightedHeuristicSumRepresentation
 from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
 from Keke_PY.keke_game.keke import GameState, make_level, parse_map
 from Keke_PY.keke_game.simulation import load_level_set
@@ -27,12 +30,14 @@ with open(file_name) as file:
     lines: List[str] = file.readlines()
 
 
+time_matrix: List[List[Optional[float]]] = []
 solving_matrix: List[List[bool]] = []
 genome_list: List[str] = []
 
 for line in lines:
     if line.startswith("LEVEL AGENT EVALUATION"):
         _, *results = line.split(':')
+        time_matrix.append([None if result.strip() == "----" else float(result) for result in results])
         solving_matrix.append([result.strip() != "----" for result in results])
     if line.startswith("LEVEL AGENT GENOME"):
         _, *result = line.split(':')
@@ -142,16 +147,14 @@ class EnsembleProblem(KekeProblem):
         self.ensemble_parts = len(level_and_times_for_policy)
         self.tuple_representation = TupleRepresentation(representation, self.ensemble_parts)
         self.level_and_times_for_policy = level_and_times_for_policy
-        problem_data: Problem = representation.get_problem_data()
         super().__init__(
-            self,
-            training_batches = [level_and_times_for_policy[0][1].keys()],
+            training_batches = [list(level_and_times_for_policy[0][1].keys())],
             representation = self.tuple_representation,
             max_node_expansions = None,
             max_calculation_time = 60.0,
             time_dependent_performance_function = False,
             executor = ProcessPoolExecutor(),
-            test_batch = (),
+            test_batch = [],
             agent_factory = HeuristicGuidedSearch.GuidedSearchFactory(),
             silent = False,
             logging_prefix = "",
@@ -195,3 +198,23 @@ class EnsembleProblem(KekeProblem):
         self.log_simulation_data(simulation_results)
 
         self.generation += 1
+
+
+
+level_and_times_for_policy: List[Tuple[str, Dict[str, Optional[float]]]] = []
+
+
+for line in lines:
+    if line.startswith("LEVEL AGENT EVALUATION"):
+        _, *results = line.split(':')
+        solving_matrix.append([result.strip() != "----" for result in results])
+        genome: str = genome_list[len(level_and_times_for_policy)]
+        times: List[Optional[float]] = [None if result.strip() == "----" else float(result) for result in results]
+        assert len(times) == len(all_levels)
+        level_and_times_for_policy.append((genome, dict(zip(all_levels, times))))
+
+
+representation: HeuristicRepresentation = HeuristicTreeRepresentation(3) if use_trees else WeightedHeuristicSumRepresentation()
+
+ensemble_problem: EnsembleProblem = EnsembleProblem(representation, level_and_times_for_policy)
+

@@ -29,8 +29,8 @@ class TupleRepresentation(HeuristicRepresentation):
         inner_problem_data: Problem = self._inner_repr.get_problem_data()
         return Problem(
             n_var=self._inner_instances_per_tuple_instance * self._inner_repr_size,
-            xl=chain([inner_problem_data.xl] * self._inner_instances_per_tuple_instance),
-            xu=chain([inner_problem_data.xu] * self._inner_instances_per_tuple_instance),
+            xl=list(chain(inner_problem_data.xl for _ in range(self._inner_instances_per_tuple_instance))),
+            xu=list(chain(inner_problem_data.xu for _ in range(self._inner_instances_per_tuple_instance))),
             vtype=inner_problem_data.vtype,
         )
     def into_heuristic(self, x: np.ndarray, n: Optional[int] = None) -> Heuristic:
