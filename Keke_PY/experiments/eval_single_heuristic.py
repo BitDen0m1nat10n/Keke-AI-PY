@@ -55,7 +55,7 @@ def eval_single_heuristic(
         total_node_expansions: int = sum(node_expansions for _, (_, node_expansions, _) in data.items())
         total_calculation_time: float = sum(calculation_time for _, (_, _, calculation_time) in data.items())
         print(logging_prefix + f"level_count:{level_count}, solved_level_count:{solved_level_count}, total_node_expansions:{total_node_expansions}, total_calculation_time:{total_calculation_time}")
-        print(logging_prefix + f"solving ration:{solved_level_count / level_count}, avg node expansions:{total_node_expansions / level_count}, avg time per level:{total_calculation_time / level_count}")
+        print(logging_prefix + f"solving ratio:{solved_level_count / level_count}, avg node expansions:{total_node_expansions / level_count}, avg time per level:{total_calculation_time / level_count}")
 
 
     return performances
@@ -63,3 +63,11 @@ def eval_single_heuristic(
 if __name__ == "__main__":
 
     eval_single_heuristic(SimpleHeuristic())
+
+    """
+    Test run on my pc
+    
+    performance: {-1: 75.637660521528, 0: nan}
+    level_count:184, solved_level_count:121, total_node_expansions:191226, total_calculation_time:4382.670464038849
+    solving ratio:0.657608695652174, avg node expansions:1039.2717391304348, avg time per level:23.81886121760244
+    """
