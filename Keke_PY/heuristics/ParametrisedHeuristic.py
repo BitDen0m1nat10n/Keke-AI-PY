@@ -32,6 +32,12 @@ class Heuristic(ParametrisedHeuristic, ABC):
     def nr_of_parameters(self) -> int:
         return 0
 
+    def get_ctx(self, initial_game_state: GameState) -> dict:
+        return {
+            "initial GameState": initial_game_state,
+            "initial rules": set(initial_game_state.rules)
+        }
+
 @dataclass
 class ParametrisedHeuristicFromCallable(ParametrisedHeuristic):
     heuristic_callable: Callable

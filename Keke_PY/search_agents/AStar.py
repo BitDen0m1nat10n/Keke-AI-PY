@@ -46,10 +46,7 @@ class AStar(AIInterface):
         # Priority queue: (f(n), g(n), current_state, actions_so_far)
         # f(n) = g(n) + h(n) where g(n) is the path cost and h(n) is the heuristic estimate
 
-        ctx = {
-            "initial GameState": initial_state,
-            "initial rules": set(initial_state.rules)
-        }
+        ctx = self.heuristic.get_ctx(initial_state)
 
         pq = []
         index = 0  # Unique index to ensure tuples are compared correctly

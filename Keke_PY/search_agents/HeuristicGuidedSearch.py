@@ -45,10 +45,7 @@ class HeuristicGuidedSearch(AIInterface):
 
         stop_time: time = time.time() + max_time
 
-        ctx = {
-            "initial GameState": initial_state,
-            "initial rules": set(initial_state.rules)
-        }
+        ctx = self.heuristic.get_ctx(initial_state)
 
         pq = []
         index = 0  # Unique index to ensure tuples are compared correctly

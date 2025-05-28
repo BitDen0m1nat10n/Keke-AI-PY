@@ -66,13 +66,9 @@ class EnsembleProblem(KekeProblem):
         simulation_results: Dict[Tuple[int, str], Tuple[Union[List[str], None], int, float]] = {}
         for level_str in self.all_levels:
             initial_level_state: GameState = make_level(parse_map(level_str))
-            ctx = {
-                "initial GameState": initial_level_state,
-                "initial rules": set(initial_level_state.rules)
-            }
             for i, ensemble_parts in enumerate(instances):
                 priorities: List[float] = [
-                    classifier_part.run(initial_level_state, ctx)
+                    classifier_part.run(initial_level_state, classifier_part.get_ctx(initial_level_state))
                     for classifier_part in ensemble_parts
                 ]
                 chosen_policy: int = priorities.index(max(priorities))
