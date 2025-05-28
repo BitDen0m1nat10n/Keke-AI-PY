@@ -11,14 +11,21 @@ from Keke_PY.heuristics.hand_crafted_heuristics import named_heuristics
 from Keke_PY.keke_game.keke import parse_map, make_level, GameState
 from Keke_PY.tree_vs_linear__time_based__single_levels.ensemble.minimal_solving_set import get_minimal_solving_genomes
 from Keke_PY.tree_vs_linear__time_based__single_levels.experiment_logs.read_in_combined_log import all_levels, \
-    times_by_genome_and_level, training_levels, testing_levels
+    times_by_genome_and_level, get_levels
+
 
 def get_random_forest_classifier(
         genome_set: Optional[List[str]],
-        shuffle_labels_for_baseline: bool = False
+        shuffle_labels_for_baseline: bool = False,
+        training_level_set: List[str] = 0,
+        virtual_testing_level_set: Optional[List[str]] = 0,
 ) -> RandomForestClassifier:
     if genome_set is None:
         genome_set: List[str] = get_minimal_solving_genomes(True, True, False)
+    if training_level_set.__class__ == int:
+        training_level_set = get_levels(True, False)
+    if virtual_testing_level_set.__class__ == int:
+        virtual_testing_level_set = get_levels(False, True)
 
     # build level features and ideal classifications
 
@@ -101,32 +108,40 @@ def get_random_forest_classifier(
             shuffle(y_values)
         return x_values, np.array(y_values)
 
-    train_x, train_y = get_scikit_learn_data_for_level_strs(training_levels, shuffle_labels_for_baseline)
-    test_x, y_test = get_scikit_learn_data_for_level_strs(testing_levels, False)
+    train_x, train_y = get_scikit_learn_data_for_level_strs(training_level_set, shuffle_labels_for_baseline)
 
     classifier: RandomForestClassifier = RandomForestClassifier()
 
     classifier.fit(train_x, train_y)
 
-    y_pred = classifier.predict(test_x)
+    if virtual_testing_level_set is not None:
+        test_x, y_test = get_scikit_learn_data_for_level_strs(virtual_testing_level_set, False)
 
-    accuracy = accuracy_score(y_test, y_pred)
-    print("Accuracy:", accuracy)
+        y_pred = classifier.predict(test_x)
 
-    solvable_test_level_count: int = len([
-        test_level for test_level in testing_levels
-        if any(
-            times_by_genome_and_level[(genome_str, test_level)] is not None
-            for genome_str in genome_set
-        )
-    ])
-    solved_test_level_count: int = len([
-        test_level for i, test_level in enumerate(testing_levels)
-        if times_by_genome_and_level[(y_pred[i], test_level)] is not None
-    ])
-    print(f"{solved_test_level_count}/{solvable_test_level_count}/{len(testing_levels)}")
-    #print(y_pred)
+        accuracy = accuracy_score(y_test, y_pred)
+        print("Accuracy:", accuracy)
+
+        solvable_test_level_count: int = len([
+            test_level for test_level in virtual_testing_level_set
+            if any(
+                times_by_genome_and_level[(genome_str, test_level)] is not None
+                for genome_str in genome_set
+            )
+        ])
+        solved_test_level_count: int = len([
+            test_level for i, test_level in enumerate(virtual_testing_level_set)
+            if times_by_genome_and_level[(y_pred[i], test_level)] is not None
+        ])
+        print(f"{solved_test_level_count}/{solvable_test_level_count}/{len(virtual_testing_level_set)}")
+        #print(y_pred)
 
     return classifier
 
 
+
+if __name__ == "__main__":
+    get_random_forest_classifier(
+        get_minimal_solving_genomes(True, True, True),
+        False
+    )

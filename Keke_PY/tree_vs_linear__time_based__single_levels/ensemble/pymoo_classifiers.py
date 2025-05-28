@@ -17,18 +17,6 @@ from Keke_PY.tree_vs_linear__time_based__single_levels.ensemble.minimal_solving_
 from Keke_PY.tree_vs_linear__time_based__single_levels.experiment_logs.read_in_combined_log import \
     times_by_genome_and_level, all_levels
 
-# Train Ensemble
-"""
-def get_first_heuristic_value(serialized_heuristic: str, level_nr: int) -> float:
-    representation: HeuristicRepresentation = HeuristicTreeRepresentation() if use_trees else WeightedHeuristicSumRepresentation()
-    heuristic: Heuristic = representation.into_heuristic(representation.deserialize(serialized_heuristic))
-    initial_state: GameState = make_level(parse_map(all_levels[level_nr]))
-    ctx = {
-        "initial GameState": initial_state,
-        "initial rules": set(initial_state.rules)
-    }
-    return heuristic.run(initial_state, ctx)
-"""
 
 class EnsembleProblem(KekeProblem):
 
