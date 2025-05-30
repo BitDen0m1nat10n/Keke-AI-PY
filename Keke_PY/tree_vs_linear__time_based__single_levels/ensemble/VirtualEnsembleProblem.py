@@ -90,7 +90,7 @@ def evaluate_ensemble(
         time_limit: float = 60.0,
         logging_prefix: Optional[str] = "",
         virtual_evaluation_on_precomputed_data: bool = False
-) -> int:
+) -> str:
     representation = DummyRepresentation(ensemble)
     test_problem: KekeProblem
     if virtual_evaluation_on_precomputed_data:
@@ -122,7 +122,7 @@ def evaluate_ensemble(
 
 def evaluate_problem(
         test_problem: KekeProblem
-) -> int:
+) -> str:
     assert test_problem.representation.__class__ == DummyRepresentation
     assert test_problem.generation == 0
     test_problem.register_and_run_next_generation([test_problem.representation.deserialize("_")])
@@ -144,4 +144,4 @@ def evaluate_problem(
         print(test_problem.logging_prefix + f"level_count:{level_count}, solved_level_count:{solved_level_count}, total_node_expansions:{total_node_expansions}, total_calculation_time:{total_calculation_time}")
         print(test_problem.logging_prefix + f"solving ratio:{solved_level_count / level_count}, avg node expansions:{total_node_expansions / level_count}, avg time per level:{total_calculation_time / level_count}")
 
-    return solved_level_count
+    return f"{solved_level_count}/{len(data.items())}"

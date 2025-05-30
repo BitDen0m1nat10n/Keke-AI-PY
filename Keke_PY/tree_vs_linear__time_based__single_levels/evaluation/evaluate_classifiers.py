@@ -7,7 +7,7 @@ if True:
 
 
 import itertools
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict, Iterable
 
 from sklearn.ensemble import RandomForestClassifier
 
@@ -36,7 +36,7 @@ def evaluation_run(
             "RandomForestClassifierEnsemble",
             "HeuristicClassifierEnsemble"
         ] = "RandomForestClassifierEnsemble"
-) -> int:
+) -> str:
 
     policy_representation: HeuristicRepresentation = HeuristicTreeRepresentation() if use_trees else WeightedHeuristicSumRepresentation()
 
@@ -104,21 +104,30 @@ if __name__ == "__main__":
             in itertools.product(
                 [True, False],
                 [True, False],
-                [False],#, False],
+                [True],#, False],
                 ["NearestNeighborEnsemble", "RandomForestClassifierEnsemble"]#, "HeuristicClassifierEnsemble"]
             )
     ]
 
-    argument_combo = argument_combos[int_arguments[0]]
-    print(argument_combo)
-    results: List[int] = []
+    results: Dict[int, List[str]] = {}
 
-    for i in range(repetitions):
+    combo_indices: Iterable[int] = range(len(argument_combos))
+    if len(int_arguments) >= 1:
+        combo_indices = int_arguments
+
+    for combo_index in combo_indices:
+        argument_combo = argument_combos[combo_index]
         print(argument_combo)
-        results.append(evaluation_run(**argument_combo))
+        res: List[str] = []
 
-    print(argument_combo)
-    print(results)
+        for i in range(repetitions):
+            print(argument_combo)
+            res.append(evaluation_run(**argument_combo))
+        results[combo_index] = res
+
+    for combo_index in combo_indices:
+        print(argument_combos[combo_index])
+        print(results[combo_index])
 
 
 """
