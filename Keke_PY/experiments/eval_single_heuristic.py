@@ -48,7 +48,7 @@ def eval_single_heuristic(
     if logging_prefix is not None:
         print(logging_prefix + f"performance: {performances}")
 
-        data: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int]] = test_problem.past_evaluations_by_gen_index_and_level_id
+        data: Dict[Tuple[int, int, int], Tuple[Union[List[str], None], int, float]] = test_problem.past_evaluations_by_gen_index_and_level_id
 
         level_count: int = len(data.items())
         solved_level_count: int = sum(solution is not None for _, (solution, _, _) in data.items())
