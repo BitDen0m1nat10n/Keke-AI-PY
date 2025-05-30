@@ -1,0 +1,23 @@
+{'use_trees': True, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'NearestNeighborEnsemble'}
+[107, 107, 107, 107, 107, 107, 107, 107, 107, 107]
+
+{'use_trees': True, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'RandomForestClassifierEnsemble'}
+[59, 58, 59, 56, 57, 59, 59, 58, 58, 57]
+
+{'use_trees': True, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'NearestNeighborEnsemble'}
+[107, 107, 107, 107, 107, 107, 107, 107, 107, 107]
+
+{'use_trees': True, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'RandomForestClassifierEnsemble'}
+[57, 59, 57, 59, 57, 56, 60, 60, 60, 61]
+
+{'use_trees': False, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'NearestNeighborEnsemble'}
+[97, 97, 97, 97, 97, 97, 97, 97, 97, 97]
+
+{'use_trees': False, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'RandomForestClassifierEnsemble'}
+[58, 60, 58, 58, 55, 54, 58, 57, 60, 59]
+
+{'use_trees': False, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'NearestNeighborEnsemble'}
+[97, 97, 97, 97, 97, 97, 97, 97, 97, 97]
+
+{'use_trees': False, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': False, 'ensemble_method': 'RandomForestClassifierEnsemble'}
+[68, 68, 66, 68, 68, 66, 66, 65, 67, 65]

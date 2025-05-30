@@ -88,7 +88,6 @@ if __name__ == "__main__":
         if argument.isdigit():
             int_arguments.append(int(argument))
 
-    repetitions: int = 10
 
 
     def get_kwargs(**kwargs):
@@ -120,9 +119,8 @@ if __name__ == "__main__":
         print(argument_combo)
         res: List[str] = []
 
-        for i in range(repetitions):
-            print(argument_combo)
-            res.append(evaluation_run(**argument_combo))
+        print(argument_combo)
+        res.append(evaluation_run(**argument_combo))
         results[combo_index] = res
 
     for combo_index in combo_indices:
