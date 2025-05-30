@@ -61,3 +61,21 @@ def get_levels(training_set: bool = True, testing_set: bool = True) -> List[str]
     ) + (
         testing_levels if testing_set else []
     )
+
+
+if __name__ == "__main__":
+    def min_or_60(params: List[float]) -> float:
+        if params.__class__ == float:
+            return params
+        if len(params) == 0:
+            return 60.0
+        return min(params)
+    minimal_times: List[float] = [
+        min_or_60(list(
+            times_by_genome_and_level[(genome, level)]
+            for genome in tree_genome_strs_on_training_set
+            if times_by_genome_and_level[(genome, level)] is not None
+        ))
+        for level in all_levels
+    ]
+    print(sum(minimal_times)/len(minimal_times))

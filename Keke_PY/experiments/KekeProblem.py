@@ -94,7 +94,8 @@ class KekeProblem(Problem):
             max_calculation_time: float = math.inf,
             max_node_expansions: Optional[int] = 2000,
             time_dependent_performance_function: bool = False,
-            logging_prefix: Optional[str] = ""
+            logging_prefix: Optional[str] = "",
+            **args
     ):
         if training_levels_or_src.__class__ == str:
             training_levels_or_src = [
@@ -121,6 +122,7 @@ class KekeProblem(Problem):
             max_node_expansions=max_node_expansions,
             time_dependent_performance_function=time_dependent_performance_function,
             logging_prefix=logging_prefix,
+            **args
         )
 
     def run_as_next_generation(self, instances: [AIInterface]):
