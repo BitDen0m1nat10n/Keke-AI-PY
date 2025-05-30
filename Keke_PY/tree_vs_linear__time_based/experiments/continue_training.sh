@@ -28,4 +28,4 @@ echo ""
 # submit your job from.
 cd $SLURM_SUBMIT_DIR
 
-python Keke_PY/experiments/tree_vs_linear__time_based/continue_training.py --argument $SLURM_ARRAY_TASK_ID
+python Keke_PY/tree_vs_linear__time_based/experiments/continue_training.py --argument $SLURM_ARRAY_TASK_ID

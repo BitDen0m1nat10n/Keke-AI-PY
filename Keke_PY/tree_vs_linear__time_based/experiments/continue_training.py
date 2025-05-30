@@ -3,7 +3,7 @@ if True:
     from os.path import dirname, abspath
     import sys
     sys.path.append(dirname(dirname(dirname(dirname(abspath(__file__))))))
-
+assert False, "This file has to be checked on whether it still fits with training.py!"
 
 import multiprocessing
 import time

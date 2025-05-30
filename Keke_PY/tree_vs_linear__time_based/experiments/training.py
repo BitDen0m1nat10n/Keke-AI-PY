@@ -7,11 +7,15 @@ if True:
 
 import multiprocessing
 import time
-from typing import Iterable, List
+from typing import Iterable, List, Tuple
 
 from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.core.algorithm import Algorithm
 from pymoo.optimize import minimize
+import numpy as np
+
+from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
+from Keke_PY.tree_vs_linear__time_based__single_levels.ensemble.VirtualEnsembleProblem import evaluate_ensemble
 
 from Keke_PY.search_agents.HeuristicGuidedSearch import HeuristicGuidedSearch
 from Keke_PY.experiments.KekeProblem import KekeProblem
@@ -40,8 +44,7 @@ agent_factory = HeuristicGuidedSearch.GuidedSearchFactory()
 
 optimization_algorithm: Algorithm = GA(pop_size=pop_size, **representation.algorithm_arguments())
 
-
-test_problem = KekeProblem.default_problem(
+training_problem = KekeProblem.default_problem(
     representation,
     multiprocessing.Pool(20),
     agent_factory,
@@ -51,7 +54,9 @@ test_problem = KekeProblem.default_problem(
     max_calculation_time = 60.0,
     max_node_expansions = None,
     time_dependent_performance_function = True,
+    logging_prefix="ACTUAL_TRAINING__"
 )
+
 
 
 def measure_time() -> Iterable[None]:
@@ -62,22 +67,35 @@ def measure_time() -> Iterable[None]:
 
 if __name__ == '__main__':
 
-    eval_single_heuristic(SimpleHeuristic(), test_levels_or_src="./json_levels/test_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TEST_SET__")
-    eval_single_heuristic(SimpleHeuristic(), test_levels_or_src="./json_levels/train_LEVELS.json", logging_prefix="SIMPLE_HEURISTIC_ON_TRAIN_SET__")
+    evaluate_ensemble(SimpleHeuristic(), 60.0, "BASELINE__", False)
 
     for _ in measure_time():
-        info: List = [optimization_algorithm, representation, agent_factory]
+        info: List = [optimization_algorithm, representation, agent_factory, "60.0s/level"]
 
-        print("testing:", *info)
+        print(info)
 
-
-
-        res = minimize(
-            test_problem,
-            optimization_algorithm,
-            termination=("n_eval", n_evals),
-            verbose=True
-        )
+        for _ in measure_time():
+            print(f"TRAINING ON all {len(training_problem.training_batches[0])} training_levels:")
 
 
-        print("testing done:", *info)
+            res = minimize(
+                training_problem,
+                optimization_algorithm,
+                termination=("n_eval", n_evals),
+                verbose=True
+            )
+
+            print(f"TRAINING ON all {len(training_problem.training_batches[0])} training_levels.")
+            print("training done.")
+
+        print("\nTRAINING DONE\n")
+        print("\n-----!!!NEW PROBLEM!!!-----\n")
+        print("\n---TEST BEST INDUVIDUAL ON ALL LEVELS---\n")
+
+        best_individual_index: Tuple[int, int] = max(
+            training_problem.get_best_past_individuals_generation_nrs_and_indices(0))
+        best_individual_encoded: np.ndarray = training_problem.past_instances_by_gen_and_index[best_individual_index]
+        best_individual: Heuristic = representation.into_heuristic(best_individual_encoded)
+
+        evaluate_ensemble(best_individual, 60.0, "BASELINE__", False)
+        print(info)
