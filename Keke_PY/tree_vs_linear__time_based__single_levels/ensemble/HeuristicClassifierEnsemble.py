@@ -4,6 +4,7 @@ from typing import List, Tuple, Dict, Optional, Iterable
 
 import numpy
 import numpy as np
+from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.core.crossover import Crossover
 from pymoo.core.duplicate import DuplicateElimination
 from pymoo.core.individual import Individual
@@ -11,6 +12,7 @@ from pymoo.core.mutation import Mutation
 from pymoo.core.population import Population
 from pymoo.core.problem import Problem
 from pymoo.core.sampling import Sampling
+from pymoo.optimize import minimize
 
 from Keke_PY.heuristic_pymoo_representations.HeuristicRepresentation import HeuristicRepresentation
 from Keke_PY.heuristic_pymoo_representations.HeuristicTreeRepresentation import HeuristicTreeRepresentation
@@ -49,49 +51,106 @@ class HeuristicClassifierEnsemble(ClassifierEnsemble):
         ]
         return self.indicators_and_heuristic_genomes[indicator_values.index(max(indicator_values))][1]
 
+    @staticmethod
+    def trained(
+            indicator_representation: HeuristicRepresentation,
+            ensemble_part_representation: HeuristicRepresentation,
+            available_policies: List[str],
+            training_levels: List[str],
+            time_limit: float = 60.0,
+            pop_size: int = 10,
+            generation_count: int = 50,
+    ) -> Tuple['HeuristicClassifierEnsemble', 'HeuristicClassifierEnsembleRepresentation']:
+        ensemble_representation: HeuristicClassifierEnsembleRepresentation = HeuristicClassifierEnsembleRepresentation(
+            indicator_representation,
+            available_policies,
+            ensemble_part_representation,
+        )
+        training_problem: VirtualEnsembleProblem = VirtualEnsembleProblem.default_problem(
+            representation=ensemble_representation,
+            executor=multiprocessing.Pool(20),
+            max_node_expansions=None,
+            max_calculation_time=time_limit,
+            time_dependent_performance_function=True,
+            agent_factory=HeuristicGuidedSearch.GuidedSearchFactory(),
+            test_levels_or_src=[],
+            training_levels_or_src=training_levels,
+            logging_prefix="VIRTUAL_CLASSIFIER_TRAINING__"
+        )
+        minimize(
+            training_problem,
+            GA(pop_size=pop_size, **ensemble_representation.algorithm_arguments()),
+            termination=("n_eval", pop_size * generation_count),
+            verbose=True
+        )
+
+        best_individual_index: Tuple[int, int] = \
+            max(training_problem.get_best_past_individuals_generation_nrs_and_indices(0))
+        best_individual_encoded: np.ndarray = training_problem.past_instances_by_gen_and_index[best_individual_index]
+        best_individual: HeuristicClassifierEnsemble = ensemble_representation.into_heuristic(best_individual_encoded)
+
+
+        return best_individual, ensemble_representation
+
 class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
-    _inner_repr: HeuristicRepresentation
-    _inner_repr_size: int
-    _inner_instances_per_tuple_instance: int
-    def __init__(self, inner_representation: HeuristicRepresentation, inner_instances_per_tuple_instance: int):
-        self._inner_repr = inner_representation
-        self._inner_instances_per_tuple_instance = inner_instances_per_tuple_instance
-        self._inner_repr_size = inner_representation.get_problem_data().n_var
+    _indicator_repr: HeuristicRepresentation
+    _indicator_repr_size: int
+    _nr_of_ensemble_parts: int
+    _ensemble_part_labels: List[str]
+    _ensemble_parts_representation: HeuristicRepresentation
+    def __init__(
+            self,
+            inner_representation: HeuristicRepresentation,
+            ensemble_part_labels: List[str],
+            ensemble_parts_representation: HeuristicRepresentation,
+    ):
+        self._indicator_repr = inner_representation
+        self._nr_of_ensemble_parts = len(ensemble_part_labels)
+        self._indicator_repr_size = inner_representation.get_problem_data().n_var
+        self._ensemble_part_labels = ensemble_part_labels
+        self._ensemble_parts_representation = ensemble_parts_representation
 
 
     def get_problem_data(self) -> Problem:
-        inner_problem_data: Problem = self._inner_repr.get_problem_data()
+        inner_problem_data: Problem = self._indicator_repr.get_problem_data()
         return Problem(
-            n_var=self._inner_instances_per_tuple_instance * self._inner_repr_size,
-            xl=list(chain(inner_problem_data.xl for _ in range(self._inner_instances_per_tuple_instance))),
-            xu=list(chain(inner_problem_data.xu for _ in range(self._inner_instances_per_tuple_instance))),
+            n_var=self._nr_of_ensemble_parts * self._indicator_repr_size,
+            xl=list(chain(inner_problem_data.xl for _ in range(self._nr_of_ensemble_parts))),
+            xu=list(chain(inner_problem_data.xu for _ in range(self._nr_of_ensemble_parts))),
             vtype=inner_problem_data.vtype,
         )
-    def into_heuristic(self, x: np.ndarray, n: Optional[int] = None) -> Heuristic:
-        assert n.__class__ == int, "This representation contains multiple heuristics, so it isn't clear, which one should be returned."
-        assert 0 <= n < self._inner_instances_per_tuple_instance, f"n={n} should be in [0, {self._inner_instances_per_tuple_instance})"
-        return self._inner_repr.into_heuristic(x[ n*self._inner_repr_size : (n+1)*self._inner_repr_size ])
-    def into_heuristics(self, x: np.ndarray) -> List[Heuristic]:
+    def into_heuristic(self, x: np.ndarray, n: Optional[int] = None) -> HeuristicClassifierEnsemble:
+        return HeuristicClassifierEnsemble([
+            (
+                self._indicator_repr.into_heuristic(x[n * self._indicator_repr_size: (n + 1) * self._indicator_repr_size]),
+                self._ensemble_part_labels[n]
+            )
+            for n in range(len(self._ensemble_part_labels))
+        ], self._indicator_repr)
+        assert n.__class__ == int, "This indicator_representation contains multiple heuristics, so it isn't clear, which one should be returned."
+        assert 0 <= n < self._nr_of_ensemble_parts, f"n={n} should be in [0, {self._nr_of_ensemble_parts})"
+        return self._indicator_repr.into_heuristic(x[n * self._indicator_repr_size: (n + 1) * self._indicator_repr_size])
+    def into_indicators(self, x: np.ndarray) -> List[Heuristic]:
         return [
             self.into_heuristic(x, part)
-            for part in range(self._inner_instances_per_tuple_instance)
+            for part in range(self._nr_of_ensemble_parts)
         ]
     def serialize(self, x: np.ndarray) -> str:
         parts: List[str] = [
-            self._inner_repr.serialize(x[ n*self._inner_repr_size : (n+1)*self._inner_repr_size ])
-            for n in range(self._inner_instances_per_tuple_instance)
+            self._indicator_repr.serialize(x[n * self._indicator_repr_size: (n + 1) * self._indicator_repr_size])
+            for n in range(self._nr_of_ensemble_parts)
         ]
         lengths_of_parts: List[int] = [part.count(';') for part in parts]
         return f"{';'.join(map(str, lengths_of_parts))};{';'.join(parts)}"
     def deserialize(self, x: str) -> np.ndarray:
         entries: List[str] = x.split(';')
-        lengths_of_parts: Iterable[int] = map(int, entries[:self._inner_instances_per_tuple_instance])
+        lengths_of_parts: Iterable[int] = map(int, entries[:self._nr_of_ensemble_parts])
         inner_serialized: List[str] = []
-        read_index: int = self._inner_instances_per_tuple_instance
+        read_index: int = self._nr_of_ensemble_parts
         for part_length in lengths_of_parts:
             inner_serialized.append(';'.join(entries[ read_index : read_index+part_length ]))
             read_index += part_length
-        inner_deserialized: List[np.ndarray] = [self._inner_repr.deserialize(part) for part in inner_serialized]
+        inner_deserialized: List[np.ndarray] = [self._indicator_repr.deserialize(part) for part in inner_serialized]
         return np.array(chain(inner_deserialized))
     @property
     def sampling(self) -> Sampling:
@@ -108,14 +167,14 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
 
 
     def _get_inner_problem(self, problem: Problem, part: int) -> Problem:
-        assert problem.n_var == self._inner_repr_size * self._inner_instances_per_tuple_instance
+        assert problem.n_var == self._indicator_repr_size * self._nr_of_ensemble_parts
         return Problem(
-            n_var=self._inner_repr_size,
+            n_var=self._indicator_repr_size,
             n_obj=problem.n_obj,
             n_ieq_constr=problem.n_ieq_constr,
             n_eq_constr=problem.n_eq_constr,
-            xl=problem.xl[ part*self._inner_repr_size : (part+1)*self._inner_repr_size ],
-            xu=problem.xu[ part*self._inner_repr_size : (part+1)*self._inner_repr_size ],
+            xl=problem.xl[ part*self._indicator_repr_size: (part + 1) * self._indicator_repr_size],
+            xu=problem.xu[ part*self._indicator_repr_size: (part + 1) * self._indicator_repr_size],
             vtype=problem.vtype,
         )
 
@@ -125,13 +184,13 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
 
         def __init__(self, tuple_representation: 'HeuristicClassifierEnsembleRepresentation'):
             self._ensemble_representation = tuple_representation
-            self._inner_sampling = tuple_representation._inner_repr.sampling
+            self._inner_sampling = tuple_representation._indicator_repr.sampling
             super().__init__()
 
         def _do(self, problem, n_samples, **kwargs) -> np.ndarray:
             inners: List[np.ndarray] = [
                 self._inner_sampling._do(self._ensemble_representation._get_inner_problem(problem, part), n_samples, **kwargs)
-                for part in range(self._ensemble_representation._inner_instances_per_tuple_instance)
+                for part in range(self._ensemble_representation._nr_of_ensemble_parts)
             ]
             return numpy.concatenate(inners, 1)
 
@@ -141,7 +200,7 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
 
         def __init__(self, tuple_representation: 'HeuristicClassifierEnsembleRepresentation'):
             self._ensemble_repr = tuple_representation
-            self._inner_mutation = tuple_representation._inner_repr.mutation
+            self._inner_mutation = tuple_representation._indicator_repr.mutation
             super().__init__()
             self.prob = self._inner_mutation.prob.get()
 
@@ -151,8 +210,8 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
 
         def _do(self, problem, x, **kwargs):
             inner_xs: List[np.ndarray] = [
-                x[:, part*self._ensemble_repr._inner_repr_size: (part + 1) * self._ensemble_repr._inner_repr_size]
-                for part in range(self._ensemble_repr._inner_instances_per_tuple_instance)
+                x[:, part*self._ensemble_repr._indicator_repr_size: (part + 1) * self._ensemble_repr._indicator_repr_size]
+                for part in range(self._ensemble_repr._nr_of_ensemble_parts)
             ]
             inner_results: List[np.ndarray] = [
                 self._inner_mutation._do(self._ensemble_repr._get_inner_problem(problem, part), inner_x, **kwargs)
@@ -160,7 +219,7 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
             ]
             if all(
                 id(inner_results[i]) == id(inner_xs[i])
-                for i in range(self._ensemble_repr._inner_instances_per_tuple_instance)
+                for i in range(self._ensemble_repr._nr_of_ensemble_parts)
             ):
                 return x
             return numpy.concatenate(inner_results, 1)
@@ -171,7 +230,7 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
 
         def __init__(self, tuple_representation: 'HeuristicClassifierEnsembleRepresentation'):
             self._ensemble_repr = tuple_representation
-            self._inner_crossover = tuple_representation._inner_repr.crossover
+            self._inner_crossover = tuple_representation._indicator_repr.crossover
             super().__init__(
                 self._inner_crossover.n_parents,
                 self._inner_crossover.n_offsprings
@@ -184,8 +243,8 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
 
         def _do(self, problem, x, **kwargs):
             inner_xs: List[np.ndarray] = [
-                x[:, :, part*self._ensemble_repr._inner_repr_size: (part + 1) * self._ensemble_repr._inner_repr_size]
-                for part in range(self._ensemble_repr._inner_instances_per_tuple_instance)
+                x[:, :, part*self._ensemble_repr._indicator_repr_size: (part + 1) * self._ensemble_repr._indicator_repr_size]
+                for part in range(self._ensemble_repr._nr_of_ensemble_parts)
             ]
             inner_results: List[np.ndarray] = [
                 self._inner_crossover._do(self._ensemble_repr._get_inner_problem(problem, part), inner_x, **kwargs)
@@ -198,13 +257,13 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
         _inner_duplicate_elimination: DuplicateElimination
         def __init__(self, tuple_representation: 'HeuristicClassifierEnsembleRepresentation'):
             self._ensemble_repr = tuple_representation
-            self._inner_duplicate_elimination = tuple_representation._inner_repr.duplicate_elimination
+            self._inner_duplicate_elimination = tuple_representation._indicator_repr.duplicate_elimination
             super().__init__()
 
         def _do(self, pop, other, is_duplicate):
             def inner_individual(individual: Individual, i: int) -> Individual:
                 res = individual.copy()
-                res.X = individual.X[i * self._ensemble_repr._inner_repr_size: (i + 1) * self._ensemble_repr._inner_repr_size]
+                res.X = individual.X[i * self._ensemble_repr._indicator_repr_size: (i + 1) * self._ensemble_repr._indicator_repr_size]
                 return res
             def inner_population(p: Population, i: int) -> Population:
                 return Population([
@@ -212,7 +271,7 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
                     for individual in p
                 ])
             inner_is_duplicate = np.copy(is_duplicate)
-            for part in range(self._ensemble_repr._inner_instances_per_tuple_instance):
+            for part in range(self._ensemble_repr._nr_of_ensemble_parts):
                 inner_pop: Population = inner_population(pop, part)
                 inner_other = None if other is None else inner_population(other, part)
                 self._inner_duplicate_elimination._do(inner_pop, inner_other, inner_is_duplicate)
@@ -221,7 +280,7 @@ class HeuristicClassifierEnsembleRepresentation(HeuristicRepresentation):
 
 
     def __str__(self):
-        return f"({HeuristicRepresentation.__str__(self)} of {self._inner_instances_per_tuple_instance} * {str(self._inner_repr)})"
+        return f"({HeuristicRepresentation.__str__(self)} of {self._nr_of_ensemble_parts} * {str(self._indicator_repr)})"
 
 
 
@@ -241,16 +300,11 @@ if __name__ == "__main__":
 
     representation: HeuristicRepresentation = HeuristicTreeRepresentation(3) if use_trees else WeightedHeuristicSumRepresentation()
 
-    ensemble_training_problem: VirtualEnsembleProblem.default_problem(
-        representation=representation,
-        executor=multiprocessing.Pool(20),
-        max_node_expansions=None,
-        max_calculation_time=60.0,
-        time_dependent_performance_function=True,
-        agent_factory=HeuristicGuidedSearch.GuidedSearchFactory(),
-        test_levels_or_src=[],
-        training_levels_or_src=training_levels,
-        logging_prefix=""
+    res, res_repr = HeuristicClassifierEnsemble.trained(
+        representation,
+        representation,
+        minimal_solving_genomes,
+        training_levels
     )
 
     # TODO: train ensemble and measure in actual runtime

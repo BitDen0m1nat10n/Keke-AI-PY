@@ -63,6 +63,17 @@ def get_levels(training_set: bool = True, testing_set: bool = True) -> List[str]
     )
 
 
+level_for_genome: Dict[str, str] = dict([
+    (genome, all_levels[i // 2])
+    for i, genome in enumerate(_genome_list)
+])
+
+genome_for_level: Dict[str, str] = dict([
+    (all_levels[i // 2], genome)
+    for i, genome in enumerate(_genome_list)
+])
+
+
 if __name__ == "__main__":
     def min_or_60(params: List[float]) -> float:
         if params.__class__ == float:
