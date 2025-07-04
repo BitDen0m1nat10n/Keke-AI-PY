@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=EnsembleEvaluation
+#SBATCH --job-name=EnsembleReEvaluation
 #SBATCH --mail-user=rongero@tnt.uni-hannover.de
 #SBATCH --mail-type=ALL
 #SBATCH --partition=cpu_normal_stud
@@ -8,7 +8,7 @@
 #SBATCH --array=0-9
 #SBATCH --cpus-per-task=20
 #SBATCH --mem-per-cpu=4G
-#SBATCH --time=1-0 # Days_hours
+#SBATCH --time=0-5 # Days_hours
 #SBATCH --output=EnsembleEvaluation_%A_%a-out.txt   # Logdatei für den merged STDOUT/STDERR output (%A wird durch slurm Job-ID ersetzt und %a durch den Array Index)
 
 
