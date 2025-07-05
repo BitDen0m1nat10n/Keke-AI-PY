@@ -136,26 +136,3 @@ if __name__ == "__main__":
         print(argument_combos[combo_index])
         print(results[combo_index])
 
-
-"""
-
-{'use_trees': True, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
-{'use_trees': True, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[62, 63, 61, 59, 58, 60, 62, 59, 62, 60]
-{'use_trees': True, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
-{'use_trees': True, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[63, 65, 67, 65, 65, 65, 61, 65, 66, 69]
-{'use_trees': False, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[98, 98, 98, 98, 98, 98, 98, 98, 98, 98]
-{'use_trees': False, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[66, 67, 66, 65, 68, 67, 66, 66, 67, 69]
-{'use_trees': False, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[98, 98, 98, 98, 98, 98, 98, 98, 98, 98]
-{'use_trees': False, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[64, 64, 63, 66, 65, 65, 63, 64, 64, 64]
-
-
-
-"""
