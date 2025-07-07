@@ -11,6 +11,7 @@ from Keke_PY.heuristic_pymoo_representations.DummyRepresentation import DummyRep
 from Keke_PY.heuristics.ZeroHeuristic import ZeroHeuristic
 from Keke_PY.search_agents.BFS import BFS
 from Keke_PY.search_agents.DFS import DFS
+from Keke_PY.search_agents.Default_Agent import DefaultAgent
 from Keke_PY.search_agents.ai_interface import AgentFromPolicy
 from Keke_PY.tree_vs_linear__time_based__single_levels.experiment_logs.read_in_combined_log import testing_levels
 
@@ -23,7 +24,8 @@ from Keke_PY.tree_vs_linear__time_based__single_levels.ensemble.VirtualEnsembleP
 def baseline_evaluation_run(
         baseline_methode: Union[
             "BFS",
-            "DFS"
+            "DFS",
+            "DefaultAgent"
         ] = "BFS",
         max_calculation_time: float = 60.0,
         max_node_expansions: Optional[int] = None,
@@ -34,6 +36,8 @@ def baseline_evaluation_run(
         baseline_factory = BFS.BFSFactory()
     elif baseline_methode == "DFS":
         baseline_factory = DFS.DFSFactory()
+    elif baseline_methode == "DefaultAgent":
+        baseline_factory = DefaultAgent.DefaultAgentFactory()
     else:
         assert False, f'baseline_methode == \"{baseline_methode}\", but should be one of "BFS" or "DFS"!'
 
@@ -74,12 +78,12 @@ if __name__ == "__main__":
             baseline_methode,\
             max_calculation_time, max_node_expansions
             in itertools.product(
-                ["BFS", "DFS"],
+                ["DefaultAgent"],#, "BFS", "DFS"],
                 [60.0, 10.0],
                 [None, 10_000]
             )
         if (max_calculation_time == 60.0 and max_node_expansions is None) or\
-           (max_calculation_time == 10.0 and max_node_expansions is 10_000)
+           (max_calculation_time == 10.0 and max_node_expansions == 10_000)
     ]
 
     results: Dict[int, List[str]] = {}
