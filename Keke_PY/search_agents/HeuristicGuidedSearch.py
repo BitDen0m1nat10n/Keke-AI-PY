@@ -84,3 +84,12 @@ class HeuristicGuidedSearch(AIInterface):
     class GuidedSearchFactory(AgentFromPolicy):
         def make_agent_from_policy(self, policy: Heuristic) -> AIInterface:
             return HeuristicGuidedSearch(policy)
+
+
+    class ConstantGuidedSearchFactory(GuidedSearchFactory):
+        constant_policy: Heuristic
+
+        def __init__(self, policy: Heuristic):
+            self.constant_policy = policy
+        def make_agent_from_policy(self, _policy: Heuristic) -> AIInterface:
+            return HeuristicGuidedSearch.GuidedSearchFactory.make_agent_from_policy(self, self.constant_policy)

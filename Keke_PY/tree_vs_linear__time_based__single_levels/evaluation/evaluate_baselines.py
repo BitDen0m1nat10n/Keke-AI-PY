@@ -14,6 +14,10 @@ from Keke_PY.search_agents.DFS import DFS
 from Keke_PY.search_agents.Default_Agent import DefaultAgent
 from Keke_PY.search_agents.ai_interface import AgentFromPolicy
 from Keke_PY.tree_vs_linear__time_based__single_levels.experiment_logs.read_in_combined_log import testing_levels
+from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
+from Keke_PY.search_agents.HeuristicGuidedSearch import HeuristicGuidedSearch
+from Keke_PY.tree_vs_linear__time_based.extract_best_from_runs import extract_best_heuristic
+
 
 import itertools
 from typing import List, Union, Dict, Iterable, Optional
@@ -22,11 +26,7 @@ from Keke_PY.tree_vs_linear__time_based__single_levels.ensemble.VirtualEnsembleP
 
 
 def baseline_evaluation_run(
-        baseline_methode: Union[
-            "BFS",
-            "DFS",
-            "DefaultAgent"
-        ] = "BFS",
+        baseline_methode: str = "BFS",
         max_calculation_time: float = 60.0,
         max_node_expansions: Optional[int] = None,
 ) -> str:
@@ -38,6 +38,14 @@ def baseline_evaluation_run(
         baseline_factory = DFS.DFSFactory()
     elif baseline_methode == "DefaultAgent":
         baseline_factory = DefaultAgent.DefaultAgentFactory()
+    elif baseline_methode.startswith("TrainedLinearSum_"):
+        index: int = int(baseline_methode.split('_')[1])
+        policy: Heuristic = extract_best_heuristic(index, False)
+        baseline_factory = HeuristicGuidedSearch.ConstantGuidedSearchFactory(policy)
+    elif baseline_methode.startswith("TrainedTrees_"):
+        index: int = int(baseline_methode.split('_')[1])
+        policy: Heuristic = extract_best_heuristic(index, True)
+        baseline_factory = HeuristicGuidedSearch.ConstantGuidedSearchFactory(policy)
     else:
         assert False, f'baseline_methode == \"{baseline_methode}\", but should be one of "BFS" or "DFS"!'
 
@@ -78,11 +86,12 @@ if __name__ == "__main__":
             baseline_methode,\
             max_calculation_time, max_node_expansions
             in itertools.product(
-                ["DefaultAgent"],#, "BFS", "DFS"],
+                #["DefaultAgent"],#, "BFS", "DFS"],
+                ["TrainedLinearSum_" + str(int_arguments[0]), "TrainedTrees_" + str(int_arguments[0])],
                 [60.0, 10.0],
                 [None, 10_000]
             )
-        if (max_calculation_time == 60.0 and max_node_expansions is None) or\
+        if # (max_calculation_time == 60.0 and max_node_expansions is None) or\
            (max_calculation_time == 10.0 and max_node_expansions == 10_000)
     ]
 
