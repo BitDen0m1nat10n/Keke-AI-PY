@@ -7,7 +7,7 @@ if True:
 
 
 import itertools
-from typing import List, Tuple, Union, Dict, Iterable
+from typing import List, Tuple, Union, Dict, Iterable, Optional
 
 from sklearn.ensemble import RandomForestClassifier
 
@@ -35,7 +35,9 @@ def evaluation_run(
             "NearestNeighborEnsemble",
             "RandomForestClassifierEnsemble",
             "HeuristicClassifierEnsemble"
-        ] = "RandomForestClassifierEnsemble"
+        ] = "RandomForestClassifierEnsemble",
+        max_calculation_time: float = 60.0,
+        max_node_expansions: Optional[int] = None,
 ) -> str:
 
     policy_representation: HeuristicRepresentation = HeuristicTreeRepresentation() if use_trees else WeightedHeuristicSumRepresentation()
@@ -75,7 +77,9 @@ def evaluation_run(
 
     return evaluate_ensemble(
         ensemble,
-        virtual_evaluation_on_precomputed_data=virtual_evaluation_on_precomputed_data
+        virtual_evaluation_on_precomputed_data=virtual_evaluation_on_precomputed_data,
+        max_calculation_time=max_calculation_time,
+        max_node_expansions=max_node_expansions,
     )
 
 
@@ -96,23 +100,28 @@ if __name__ == "__main__":
         get_kwargs(
             use_trees = use_trees,
             limit_to_minimal_solving_set = limit_to_minimal_solving_set,
-            virtual_evaluation_on_precomputed_data = virtual_evaluation_on_precomputed_data,
+            virtual_evaluation_on_precomputed_data = int_arguments[0],
             ensemble_method = ensemble_method,
+            max_calculation_time = max_calculation_time,
+            max_node_expansions = max_node_expansions,
         )
-        for use_trees, limit_to_minimal_solving_set, virtual_evaluation_on_precomputed_data, ensemble_method \
+        for use_trees, limit_to_minimal_solving_set,\
+            ensemble_method,\
+            max_calculation_time, max_node_expansions
             in itertools.product(
                 [True, False],
                 [True, False],
-                [True],#, False],
-                ["NearestNeighborEnsemble", "RandomForestClassifierEnsemble"]#, "HeuristicClassifierEnsemble"]
+                ["NearestNeighborEnsemble", "RandomForestClassifierEnsemble"],#, "HeuristicClassifierEnsemble"]
+                [60.0, 10.0],
+                [None, 10_000]
             )
+        if (max_calculation_time == 60.0 and max_node_expansions is None) or\
+           (max_calculation_time == 10.0 and max_node_expansions is 10_000)
     ]
 
     results: Dict[int, List[str]] = {}
 
     combo_indices: Iterable[int] = range(len(argument_combos))
-    if len(int_arguments) >= 1:
-        combo_indices = int_arguments
 
     for combo_index in combo_indices:
         argument_combo = argument_combos[combo_index]
@@ -127,26 +136,3 @@ if __name__ == "__main__":
         print(argument_combos[combo_index])
         print(results[combo_index])
 
-
-"""
-
-{'use_trees': True, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
-{'use_trees': True, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[62, 63, 61, 59, 58, 60, 62, 59, 62, 60]
-{'use_trees': True, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
-{'use_trees': True, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[63, 65, 67, 65, 65, 65, 61, 65, 66, 69]
-{'use_trees': False, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[98, 98, 98, 98, 98, 98, 98, 98, 98, 98]
-{'use_trees': False, 'limit_to_minimal_solving_set': True, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[66, 67, 66, 65, 68, 67, 66, 66, 67, 69]
-{'use_trees': False, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'NearestNeighborEnsemble'}
-[98, 98, 98, 98, 98, 98, 98, 98, 98, 98]
-{'use_trees': False, 'limit_to_minimal_solving_set': False, 'virtual_evaluation_on_precomputed_data': True, 'ensemble_method': 'RandomForestClassifierEnsemble'}
-[64, 64, 63, 66, 65, 65, 63, 64, 64, 64]
-
-
-
-"""

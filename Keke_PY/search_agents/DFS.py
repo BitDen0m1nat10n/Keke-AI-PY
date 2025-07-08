@@ -1,7 +1,8 @@
 import math
 import time
 
-from Keke_PY.search_agents.ai_interface import AIInterface, range_or_infinite_loop
+from Keke_PY.heuristics.ParametrisedHeuristic import Heuristic
+from Keke_PY.search_agents.ai_interface import AIInterface, range_or_infinite_loop, AgentFromPolicy
 from Keke_PY.keke_game.keke import GameState, check_win, Direction
 from Keke_PY.keke_game.simulation import advance_game_state
 from typing import List, Tuple, Union
@@ -51,10 +52,15 @@ class DFS(AIInterface):
             visited.add(state_str)
 
             # Get all possible actions and apply them
-            if len(actions) < max_depth:
+            if max_depth is None or len(actions) < max_depth:
                 for action in [Direction.Up, Direction.Down, Direction.Left, Direction.Right, Direction.Wait]:
                     next_state = advance_game_state(action, current_state.copy())
                     if next_state.unique_str() not in visited:
                         stack.append((next_state, actions + [action.name]))
 
         return [], max_forward_model_calls  # Return empty if no solution is found
+
+
+    class DFSFactory(AgentFromPolicy):
+        def make_agent_from_policy(self, _policy: Heuristic) -> AIInterface:
+            return DFS()

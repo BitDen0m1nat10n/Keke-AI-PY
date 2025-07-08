@@ -87,9 +87,10 @@ class VirtualEnsembleProblem(KekeProblem):
 
 def evaluate_ensemble(
         ensemble: ClassifierEnsemble,
-        time_limit: float = 60.0,
+        max_calculation_time: float = 60.0,
         logging_prefix: Optional[str] = "",
-        virtual_evaluation_on_precomputed_data: bool = False
+        virtual_evaluation_on_precomputed_data: bool = False,
+        max_node_expansions: Optional[int] = None,
 ) -> str:
     representation = DummyRepresentation(ensemble)
     test_problem: KekeProblem
@@ -97,8 +98,8 @@ def evaluate_ensemble(
         test_problem = VirtualEnsembleProblem.default_problem(
             representation=representation,
             executor=multiprocessing.Pool(20),
-            max_node_expansions=None,
-            max_calculation_time=time_limit,
+            max_node_expansions=max_node_expansions,
+            max_calculation_time=max_calculation_time,
             time_dependent_performance_function=True,
             agent_factory=HeuristicGuidedSearch.GuidedSearchFactory(),
             test_levels_or_src=testing_levels,
@@ -109,8 +110,8 @@ def evaluate_ensemble(
         test_problem = KekeProblem.default_problem(
             representation=representation,
             executor=multiprocessing.Pool(20),
-            max_node_expansions=None,
-            max_calculation_time=time_limit,
+            max_node_expansions=max_node_expansions,
+            max_calculation_time=max_calculation_time,
             time_dependent_performance_function=True,
             agent_factory=HeuristicGuidedSearch.GuidedSearchFactory(),
             test_levels_or_src=testing_levels,
