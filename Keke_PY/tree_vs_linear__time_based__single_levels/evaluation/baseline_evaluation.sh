@@ -25,4 +25,4 @@ echo ""
 
 cd $SLURM_SUBMIT_DIR
 
-python Keke_PY/tree_vs_linear__time_based__single_levels/evaluation/evaluate_baselines.py
+python Keke_PY/tree_vs_linear__time_based__single_levels/evaluation/evaluate_baselines.py $SLURM_ARRAY_TASK_ID
