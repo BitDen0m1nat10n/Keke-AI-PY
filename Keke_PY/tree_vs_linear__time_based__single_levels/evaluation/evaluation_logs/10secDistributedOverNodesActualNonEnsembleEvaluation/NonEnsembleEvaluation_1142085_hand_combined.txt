@@ -1,0 +1,7 @@
+The log-files where wrongly labeled 'BaselineEvaluation', since the same script (with the non-ensemble techniques inserted) was used.
+
+
+{'baseline_methode': 'TrainedLinearSum', 'max_calculation_time': 10.0, 'max_node_expansions': 10000}
+[54, 53, 72, 61, 73, 66, 64, 61, 68, 64] / 134
+{'baseline_methode': 'TrainedTrees', 'max_calculation_time': 10.0, 'max_node_expansions': 10000}
+[74, 68, 77, 74, 78, 63, 64, 75, 68, 75] / 134
