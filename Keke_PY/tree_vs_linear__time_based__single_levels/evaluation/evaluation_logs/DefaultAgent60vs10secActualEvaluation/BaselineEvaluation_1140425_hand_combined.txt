@@ -1,0 +1,7 @@
+
+
+{'baseline_methode': 'DefaultAgent', 'max_calculation_time': 60.0, 'max_node_expansions': None}
+[68, 68, 68, 68, 69, 68, 68, 68, 69, 68] / 134
+{'baseline_methode': 'DefaultAgent', 'max_calculation_time': 10.0, 'max_node_expansions': 10000}
+[65, 65, 65, 65, 65, 65, 65, 65, 65, 65] / 134
+
